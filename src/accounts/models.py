@@ -1,3 +1,6 @@
+from django.db import models
+
+# Create your models here.
 import uuid
 from typing import Optional
 from django.db import models
@@ -13,6 +16,7 @@ class UserRoles:
     REVIEWER = 'R'
     COMMITTEE_HEAD = 'C'
     ADMIN = 'A'
+    AUDITOR = 'D'
 
 
 # --- Validators ---
@@ -69,6 +73,9 @@ class UserQuerySet(models.QuerySet):
 
     def committee_heads(self):
         return self.filter(role=UserRoles.COMMITTEE_HEAD)
+    
+    def auditors(self):
+        return self.filter(role=UserRoles.AUDITOR)
 
     def admins(self):
         return self.filter(role=UserRoles.ADMIN)
@@ -112,6 +119,7 @@ class User(AbstractUser):
         STUDENT = UserRoles.STUDENT, _('طالب')
         REVIEWER = UserRoles.REVIEWER, _('مُراجع')
         COMMITTEE_HEAD = UserRoles.COMMITTEE_HEAD, _('رئيس لجنة')
+        AUDITOR = UserRoles.AUDITOR, _('المراقب')
         ADMIN = UserRoles.ADMIN, _('مدير نظام')
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -186,15 +194,13 @@ class User(AbstractUser):
         super().save(*args, **kwargs)
 
     def get_full_name(self):
-        """للتوافق مع AbstractUser"""
         return self.full_name
 
     def get_short_name(self):
-        """للتوافق مع AbstractUser"""
         return self.full_name.split()[0] if self.full_name else self.email
 
     def __str__(self):
-        return f"{self.full_name} ({self.get_role_display()})"
+        return f"{self.full_name} - ({self.get_role_display()})"
 
 
 # --- Program Model ---
@@ -204,6 +210,7 @@ class Program(models.Model):
     description = models.TextField(_("وصف البرنامج"), blank=True)
     is_active = models.BooleanField(_("متاح حالياً"), default=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = _("برنامج أكاديمي")
@@ -211,7 +218,7 @@ class Program(models.Model):
         ordering = ['name']
 
     def __str__(self):
-        return f"{self.name} ({self.code})"
+        return f"{self.name} - ({self.code})"
 
 
 # --- Student Profile ---
@@ -274,6 +281,11 @@ class StudentProfile(RoleValidatedProfileMixin, models.Model):
     disability_status = models.BooleanField(
         _("ذوي الاحتياجات الخاصة"), 
         default=False
+    )
+    
+    HasPreviousSupport	= models.BooleanField(
+        _("هل حصلت على دعم سابق؟"),
+        default=False,
     )
 
     created_at = models.DateTimeField(_("تاريخ الإنشاء"), auto_now_add=True)
@@ -421,3 +433,36 @@ class CommitteeHeadProfile(RoleValidatedProfileMixin, models.Model):
         super().clean()
         if not self.user.is_staff:
             raise ValidationError(_("رئيس اللجنة يجب أن يكون من فريق العمل (is_staff=True)."))
+
+class AuditorProfile(RoleValidatedProfileMixin, models.Model):
+    required_role = UserRoles.AUDITOR
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='auditor_profile',
+        verbose_name=_("حساب المستخدم"),
+        limit_choices_to={'role': UserRoles.AUDITOR}
+    )
+
+    assigned_programs = models.ManyToManyField(
+        Program,
+        related_name='auditors',
+        verbose_name=_("الأقسام المسئول عن تدقيقها"),
+        blank=True
+    )
+
+    bio = models.TextField(_("نبذة مختصرة"), blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = _("ملف المراقب")
+        verbose_name_plural = _("ملفات المراقبين")
+        indexes = [
+            models.Index(fields=['user']),
+        ]
+
+    def __str__(self):
+        return f"المراقب: {self.user.full_name}"
