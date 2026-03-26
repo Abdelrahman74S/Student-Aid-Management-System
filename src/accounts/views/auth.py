@@ -1,7 +1,7 @@
 import uuid
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy, reverse
-from django.views.generic import View, CreateView, TemplateView, FormView
+from django.views.generic import View, CreateView, FormView
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.views import  PasswordResetView, PasswordResetConfirmView
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -17,8 +17,6 @@ from django.contrib.auth.forms import PasswordChangeForm
 from django.template.loader import render_to_string
 from django.contrib.auth import update_session_auth_hash
 from django.utils.translation import gettext_lazy as _
-
-
 from ..models import User, StudentProfile
 from ..forms import RegistrationForm, UserLoginForm
 from ..tokens import email_verification_token
