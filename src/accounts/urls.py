@@ -1,7 +1,5 @@
-# accounts/urls.py
-
 from django.urls import path
-from django.contrib.auth.views import PasswordResetDoneView, PasswordResetCompleteView
+from django.contrib.auth.views import PasswordResetDoneView, PasswordResetCompleteView, PasswordChangeDoneView
 from .views import auth as views
 
 
@@ -33,5 +31,14 @@ urlpatterns = [
     ), name='password_reset_complete'),
     
     
+    # Password Change
+    path('password/change/', views.ChangePasswordView.as_view(), name='change_password'),
+    
+    path('password/change/done/', PasswordChangeDoneView.as_view(
+        template_name='accounts/password_change_done.html'
+    ), name='password_change_done'),
+    
     # Profile Management
+    
+    
 ]
