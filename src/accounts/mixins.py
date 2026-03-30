@@ -1,5 +1,3 @@
-# src/accounts/mixins.py
-
 from django.contrib.auth.mixins import AccessMixin
 from django.shortcuts import redirect
 from django.contrib import messages
@@ -7,7 +5,6 @@ from .models import UserRoles
 
 class RoleRequiredMixin(AccessMixin):
     allowed_roles = []
-
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return self.handle_no_permission()

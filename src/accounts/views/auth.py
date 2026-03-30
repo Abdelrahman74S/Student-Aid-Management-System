@@ -20,10 +20,11 @@ from ..models import User, StudentProfile
 from ..forms import RegistrationForm, UserLoginForm
 from ..tokens import email_verification_token
 
+
 class RegisterView(CreateView):
     model = User
     form_class = RegistrationForm
-    template_name = 'register.html'
+    template_name = 'accounts/register.html'
     success_url = reverse_lazy('accounts:login')
 
     def get(self, request, *args, **kwargs):
@@ -78,7 +79,7 @@ class RegisterView(CreateView):
 
 
 class UserLoginView(FormView):
-    template_name = 'login.html'
+    template_name = 'accounts/login.html'
     form_class = UserLoginForm
 
     def get(self, request, *args, **kwargs):
@@ -122,7 +123,7 @@ class UserLogoutView(LoginRequiredMixin,View):
 
 
 class EmailVerificationView(View):
-    template_name = 'verification_result.html'
+    template_name = 'accounts/verification_result.html'
 
     def get(self, request, token, *args, **kwargs):
         try:
@@ -167,7 +168,7 @@ class ResendVerificationEmailView(View):
         return redirect('accounts:login')
 
     def get(self, request, *args, **kwargs):
-        return render(request, 'resend_verification.html')
+        return render(request, 'accounts/resend_verification.html')
 
     def send_verification_email(self, user):
         from django.contrib.sites.shortcuts import get_current_site
@@ -201,13 +202,13 @@ class ResendVerificationEmailView(View):
 
 
 class CustomPasswordResetView(PasswordResetView):
-    template_name = 'password_reset.html'
+    template_name = 'accounts/password_reset.html'
     email_template_name = 'accounts/emails/password_reset_email.html'
     success_url = reverse_lazy('accounts:password_reset_done')
 
 
 class CustomPasswordResetConfirmView(PasswordResetConfirmView):
-    template_name = 'password_reset_confirm.html'
+    template_name = 'accounts/password_reset_confirm.html'
     success_url = reverse_lazy('accounts:password_reset_complete')
 
 
