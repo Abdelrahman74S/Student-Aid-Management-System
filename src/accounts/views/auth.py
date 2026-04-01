@@ -16,7 +16,7 @@ from django.conf import settings
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import update_session_auth_hash
 from django.utils.translation import gettext_lazy as _
-from ..models import User, StudentProfile
+from ..models import User
 from ..forms import RegistrationForm, UserLoginForm
 from ..tokens import email_verification_token
 
@@ -39,7 +39,6 @@ class RegisterView(CreateView):
         user.is_verified = False
         user.save()
 
-        StudentProfile.objects.create(user=user)
 
         self.send_verification_email(user)
 

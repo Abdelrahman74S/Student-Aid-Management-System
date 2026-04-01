@@ -43,7 +43,7 @@ urlpatterns = [
     # -----------------------------------------------
 
     # Dashboard
-    path('profile/', view.ProfileDashboardView.as_view(), name='profile_dashboard'),
+    path('profile/', view.ProfileDashboardView.as_view(), name='dashboard'),
 
     # Student Profile
     path('profile/student/', view.StudentProfileDetailView.as_view(), name='student_profile_detail'),

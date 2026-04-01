@@ -244,7 +244,9 @@ class StudentProfile(RoleValidatedProfileMixin, models.Model):
         on_delete=models.PROTECT, 
         related_name='students',
         verbose_name=_("القسم الأكاديمي"),
-        help_text=_("القسم الدراسي الذي يتبعه الطالب")
+        help_text=_("القسم الدراسي الذي يتبعه الطالب"),
+        null=True,
+        blank=True,
     )
 
     student_id = models.CharField(
