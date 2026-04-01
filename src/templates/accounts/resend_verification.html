@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}إعادة إرسال التفعيل | جامعة طنطا{% endblock %}
+
+{% block content %}
+<div class="flex flex-col justify-center py-12 sm:px-6 lg:px-8 fade-in text-right font-cairo" dir="rtl">
+    <div class="max-w-md w-full mx-auto bg-white rounded-3xl shadow-xl p-10 border border-gray-100 text-center">
+        <div class="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-blue-50 mb-6 border-2 border-blue-100 shadow-sm animate-bounce">
+            <svg class="h-10 w-10 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-900 font-tajawal mb-2 text-center leading-tight">تفعيل الحساب</h2>
+        <p class="text-gray-500 mb-8 text-sm leading-relaxed text-center px-4 font-cairo">أدخل بريدك الإلكتروني لنقوم بإعادة إرسال رابط تفعيل الحساب الخاص بك.</p>
+        
+        <form method="POST" class="space-y-6">
+            {% csrf_token %}
+            <div class="space-y-4">
+                {% for field in form %}
+                <div class="text-right">
+                    <label class="block text-sm font-bold text-gray-700 mb-2 mr-1">{{ field.label }}</label>
+                    <input type="{{ field.field.widget.input_type }}" 
+                            name="{{ field.name }}" 
+                            class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all duration-200 text-right bg-gray-50 shadow-sm">
+                    {% if field.errors %}
+                        <p class="text-red-600 text-xs mt-1 font-bold">{{ field.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            <button type="submit" class="w-full py-3.5 px-4 bg-primary-600 text-white rounded-xl font-bold hover:bg-primary-700 shadow-lg shadow-primary-50 transition-all duration-200">
+                إرسال رابط التفعيل
+            </button>
+        </form>
+        
+        <div class="mt-8 pt-6 border-t border-gray-50 text-center">
+            <a href="{% url 'accounts:login' %}" class="text-sm font-bold text-primary-600 hover:text-primary-700 font-cairo">العودة لتسجيل الدخول</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

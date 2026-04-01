@@ -1,6 +1,7 @@
 from django.urls import path
 from django.contrib.auth.views import PasswordResetDoneView, PasswordResetCompleteView, PasswordChangeDoneView
 from .views import auth as views
+from .views import profiles as view
 
 
 app_name = 'accounts'
@@ -37,6 +38,27 @@ urlpatterns = [
         template_name='accounts/password_change_done.html'
     ), name='password_change_done'),
     
+    # -----------------------------------------------
     # Profile Management
+    # -----------------------------------------------
 
+    # Dashboard
+    path('profile/', view.ProfileDashboardView.as_view(), name='profile_dashboard'),
+
+    # Student Profile
+    path('profile/student/', view.StudentProfileDetailView.as_view(), name='student_profile_detail'),
+    path('profile/student/edit/', view.StudentProfileUpdateView.as_view(), name='student_profile_update'),
+
+    # Reviewer Profile
+    path('profile/reviewer/', view.ReviewerProfileDetailView.as_view(), name='reviewer_profile_detail'),
+    path('profile/reviewer/edit/', view.ReviewerProfileUpdateView.as_view(), name='reviewer_profile_update'),
+
+    # Committee Head Profile
+    path('profile/committee-head/', view.CommitteeHeadProfileDetailView.as_view(), name='committee_head_profile_detail'),
+    path('profile/committee-head/edit/', view.CommitteeHeadProfileUpdateView.as_view(), name='committee_head_profile_update'),
+
+    # Auditor Profile
+    path('profile/auditor/', view.AuditorProfileDetailView.as_view(), name='auditor_profile_detail'),
+    path('profile/auditor/edit/', view.AuditorProfileUpdateView.as_view(), name='auditor_profile_update'),
+    
 ]
