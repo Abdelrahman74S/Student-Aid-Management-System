@@ -152,7 +152,7 @@ class AuditorProfileDetailView(LoginRequiredMixin, AuditorRequiredMixin, DetailV
     model = AuditorProfile
     template_name = 'accounts/profiles/auditor_detail.html'
     context_object_name = 'profile'
-
+    
     def get_object(self):
         return get_object_or_404(AuditorProfile, user=self.request.user)
 
@@ -172,7 +172,7 @@ class AuditorProfileUpdateView(LoginRequiredMixin, AuditorRequiredMixin, View):
         profile = get_object_or_404(AuditorProfile, user=request.user)
         user_form = UserUpdateForm(request.POST, request.FILES, instance=request.user)
         profile_form = AuditorProfileForm(request.POST, instance=profile)
-    
+
         if user_form.is_valid() and profile_form.is_valid():
             user_form.save()
             profile_form.save()

@@ -52,7 +52,8 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
-                    <a href="{% url 'accounts:profile_dashboard' %}" class="shrink-0 flex items-center">
+                    {% comment %} href="{% url 'accounts:dashboard' %}" {% endcomment %}
+                    <a  class="shrink-0 flex items-center">
                         <div class="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center text-white font-bold text-xl ml-3">
                             ط
                         </div>
