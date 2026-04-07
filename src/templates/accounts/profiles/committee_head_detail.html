@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}ملف رئيس اللجنة | جامعة طنطا{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-12 px-4 fade-in font-cairo text-right" dir="rtl">
+    <div class="bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-gray-100">
+        
+        <div class="bg-primary-700 p-8 text-white flex flex-col md:flex-row items-center justify-between gap-6">
+            <div class="flex items-center gap-6">
+                <div class="relative">
+                    {% if user.image %}
+                        <img src="{{ user.image.url }}" alt="{{ user.full_name }}" class="w-24 h-24 rounded-3xl object-cover border-4 border-white/20 shadow-lg">
+                    {% else %}
+                        <div class="w-24 h-24 bg-white/10 rounded-3xl flex items-center justify-center text-white font-bold text-4xl backdrop-blur-sm border border-white/20">
+                            {{ user.full_name|first }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="text-center md:text-right">
+                    <div class="flex items-center gap-3 mb-1 justify-center md:justify-start">
+                        <span class="bg-amber-400 text-primary-900 px-3 py-1 rounded-lg text-xs font-bold uppercase">رئيس لجنة</span>
+                        <h1 class="text-2xl font-bold font-tajawal">{{ user.full_name }}</h1>
+                    </div>
+                    <p class="text-primary-100 text-sm opacity-90">{{ profile.committee_name }}</p>
+                </div>
+            </div>
+
+            <a href="{% url 'accounts:committee_head_profile_update' %}" 
+               class="bg-white text-primary-700 px-6 py-3 rounded-2xl font-bold hover:bg-primary-50 transition-all shadow-lg flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                تعديل الإعدادات
+            </a>
+        </div>
+
+        <div class="p-8 md:p-12">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                
+                <div class="space-y-6">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4 font-tajawal flex items-center gap-2">
+                        <span class="w-2 h-6 bg-primary-600 rounded-full"></span>
+                        التوقيع الإلكتروني المعتمد
+                    </h3>
+                    <div class="bg-gray-50 border-2 border-dashed border-gray-200 rounded-4xl p-8 flex flex-col items-center justify-center min-h-[200px] shadow-inner">
+                        {% if profile.signature_image %}
+                            <img src="{{ profile.signature_image.url }}" class="max-h-32 object-contain mix-blend-multiply transition-transform hover:scale-105 duration-300" alt="توقيع رئيس اللجنة">
+                            <p class="mt-4 text-xs text-gray-400 font-medium">هذا التوقيع يظهر على مستندات القبول النهائية</p>
+                        {% else %}
+                            <div class="text-center">
+                                <svg class="w-12 h-12 text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                </svg>
+                                <span class="text-red-400 text-sm italic font-bold">لم يتم رفع توقيع معتمد بعد</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="space-y-8">
+                    <section>
+                        <h3 class="text-lg font-bold text-gray-900 mb-4 font-tajawal flex items-center gap-2">
+                            <span class="w-2 h-6 bg-amber-400 rounded-full"></span>
+                            الأقسام الخاضعة للإشراف
+                        </h3>
+                        <div class="flex flex-wrap gap-2">
+                            {% for program in profile.managed_programs.all %}
+                                <span class="bg-primary-50 text-primary-700 px-4 py-2 rounded-xl text-sm font-bold border border-primary-100 shadow-sm">
+                                    {{ program.name }}
+                                </span>
+                            {% empty %}
+                                <p class="text-gray-400 text-sm italic">لم يتم تعيين أقسام إشرافية حتى الآن.</p>
+                            {% endfor %}
+                        </div>
+                    </section>
+
+                    <section class="bg-gray-50 p-6 rounded-4xl border border-gray-100">
+                        <h4 class="text-xs font-bold text-gray-500 mb-4 uppercase tracking-widest">تفاصيل المستوى الإداري</h4>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-600 font-bold">مستوى الصلاحية</span>
+                            <div class="flex gap-1">
+                                {% for i in "12345" %}
+                                    <div class="w-4 h-2 rounded-full {% if forloop.counter <= profile.authority_level %}bg-primary-600{% else %}bg-gray-200{% endif %}"></div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}تحديث ملف الطالب | جامعة طنطا{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-12 px-4 fade-in font-cairo" dir="rtl">
+    <div class="bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-gray-100 flex flex-col md:flex-row">
+        
+        <div class="md:w-1/3 bg-primary-700 p-10 text-white flex flex-col justify-center items-center text-center">
+            <div class="w-20 h-20 bg-white/10 rounded-3xl flex items-center justify-center text-white font-bold text-4xl mb-6 backdrop-blur-sm border border-white/20">
+                ط
+            </div>
+            <h2 class="text-2xl font-bold mb-4 font-tajawal">تحديث البيانات</h2>
+            <p class="text-primary-100 text-sm leading-relaxed">
+                يرجى التأكد من دقة بياناتك الدراسية ورقم الهاتف لضمان وصول المساعدات الطلابية إليك بشكل صحيح.
+            </p>
+        </div>
+
+        <div class="md:w-2/3 p-8 md:p-12 text-right">
+            <h1 class="text-2xl font-bold text-gray-900 mb-8 font-tajawal border-b pb-4 border-gray-50">تعديل ملف الطالب</h1>
+            
+            <form method="POST" enctype="multipart/form-data" class="space-y-8">
+                {% csrf_token %}
+
+                <div class="space-y-6">
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="w-2 h-6 bg-primary-600 rounded-full"></div>
+                        <h3 class="font-bold text-gray-800 text-lg font-tajawal">البيانات الشخصية والصورة</h3>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {% for field in user_form %}
+                        <div class="flex flex-col gap-2">
+                            <label class="text-sm font-bold text-gray-700 mr-1">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}
+                                <p class="text-xs text-red-500 mt-1 font-bold">{{ field.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <hr class="border-gray-50">
+
+                <div class="space-y-6">
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="w-2 h-6 bg-amber-400 rounded-full"></div>
+                        <h3 class="font-bold text-gray-800 text-lg font-tajawal">البيانات الجامعية والأكاديمية</h3>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {% for field in profile_form %}
+                        <div class="{% if field.name == 'address' %}md:col-span-2{% endif %} flex flex-col gap-2">
+                            <label class="text-sm font-bold text-gray-700 mr-1">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}
+                                <p class="text-xs text-red-500 mt-1 font-bold">{{ field.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="pt-6 flex flex-col sm:flex-row gap-4">
+                    <button type="submit" class="flex-1 py-4 bg-primary-600 text-white font-bold rounded-2xl hover:bg-primary-700 transition-all shadow-xl shadow-primary-100 transform hover:scale-[1.01]">
+                        حفظ بيانات الملف الشخصي
+                    </button>
+                    <a href="{% url 'accounts:student_profile_detail' %}" class="px-10 py-4 bg-gray-100 text-gray-600 rounded-2xl font-bold hover:bg-gray-200 transition-all text-center">
+                        إلغاء
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* تنسيق موحد لمدخلات النموذج لتطابق التصميم العام */
+    input[type="text"], input[type="email"], input[type="number"], textarea, select, input[type="file"] {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        background-color: #f9fafb;
+        border: 1px solid #d1d5db;
+        border-radius: 0.75rem;
+        transition: all 0.2s;
+        outline: none;
+    }
+    input:focus, textarea:focus, select:focus {
+        border-color: #0ea5e9;
+        box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.2);
+    }
+    /* تنسيق خاص لخانة الـ Checkbox إذا وجدت */
+    input[type="checkbox"] {
+        width: 1.25rem;
+        height: 1.25rem;
+        border-radius: 0.25rem;
+        border: 1px solid #d1d5db;
+        accent-color: #0284c7;
+    }
+</style>
+{% endblock %}
