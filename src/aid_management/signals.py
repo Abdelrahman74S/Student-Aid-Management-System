@@ -4,6 +4,7 @@ from django.db.models import Count
 from .models import CommitteeReview, AidApplication, BudgetAllocation
 from django.utils import timezone
 
+
 @receiver(post_save, sender=CommitteeReview)
 def check_all_reviews_submitted(sender, instance, **kwargs):
     if instance.status != 'SUBMITTED':
