@@ -21,7 +21,7 @@ class UserRoles:
 
 # --- Validators ---
 tanta_email_validator = RegexValidator(
-    regex=r'^(?i)UG_\d+@science\.tanta\.edu\.eg$', 
+    regex=r'(?i)^UG_\d+@science\.tanta\.edu\.eg$', 
     message=_("يجب استخدام البريد الجامعي الرسمي لجامعة طنطا (علوم)، مثال: UG_5945090@science.tanta.edu.eg"),
     code='invalid_university_email'
 )
