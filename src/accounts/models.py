@@ -180,18 +180,15 @@ class User(AbstractUser):
         ]
 
     def save(self, *args, **kwargs):
-        if self.email:
+        if self.email and '@' in self.email:
             local, domain = self.email.split('@')
-            self.email = f"{local.upper()}@{domain.lower()}"
-            
-        if self.pk:
-            try:
-                old = User.objects.get(pk=self.pk)
-            except User.DoesNotExist:
-                old = None
-        else:
-            old = None
+            self.email = f"{local.lower()}@{domain.lower()}"
+    
+            if not self.username:
+                self.username = local.lower()
+    
         super().save(*args, **kwargs)
+        
     
     def get_full_name(self):
         return self.full_name
