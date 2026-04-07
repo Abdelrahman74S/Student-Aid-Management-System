@@ -9,7 +9,10 @@ from .models import (
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
         if instance.role == UserRoles.STUDENT:
-            StudentProfile.objects.create(user=instance)
+            StudentProfile.objects.create(
+                user=instance,
+                student_id=instance.national_id
+            )
             
         elif instance.role == UserRoles.REVIEWER:
             ReviewerProfile.objects.create(user=instance)

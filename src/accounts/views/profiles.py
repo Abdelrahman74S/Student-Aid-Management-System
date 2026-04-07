@@ -63,7 +63,7 @@ class StudentProfileUpdateView(LoginRequiredMixin, StudentRequiredMixin, View):
             user_form.save()
             profile_form.save()
             messages.success(request, _("تم تحديث البيانات الشخصية والدراسية بنجاح"))
-            return redirect('accounts:profile_dashboard')
+            return redirect('accounts:dashboard')
         
         return render(request, self.template_name, {
             'user_form': user_form,
@@ -101,7 +101,7 @@ class ReviewerProfileUpdateView(LoginRequiredMixin, ReviewerRequiredMixin, View)
             user_form.save()
             profile_form.save()
             messages.success(request, _("تم تحديث البيانات الشخصية والمهنية بنجاح"))
-            return redirect('accounts:profile_dashboard')
+            return redirect('accounts:dashboard')
         
         return render(request, self.template_name, {
             'user_form': user_form,
@@ -139,7 +139,7 @@ class CommitteeHeadProfileUpdateView(LoginRequiredMixin, CommitteeHeadRequiredMi
             user_form.save()
             profile_form.save()
             messages.success(request, _("تم تحديث بيانات رئيس اللجنة بنجاح"))
-            return redirect('accounts:profile_dashboard')
+            return redirect('accounts:dashboard')
         
         return render(request, self.template_name, {
             'user_form': user_form,
@@ -177,7 +177,7 @@ class AuditorProfileUpdateView(LoginRequiredMixin, AuditorRequiredMixin, View):
             user_form.save()
             profile_form.save()
             messages.success(request, _("تم تحديث بيانات المراقب بنجاح"))
-            return redirect('accounts:profile_dashboard')
+            return redirect('accounts:dashboard')
         
         return render(request, self.template_name, {
             'user_form': user_form,

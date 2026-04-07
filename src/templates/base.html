@@ -62,7 +62,7 @@
                     
                     {% if user.is_authenticated %}
                     <div class="hidden md:mr-6 md:flex md:space-x-8 md:space-x-reverse">
-                        <a href="{% url 'accounts:profile_dashboard' %}" class="text-gray-600 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                        <a href="{% url 'accounts:dashboard' %}" class="text-gray-600 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">
                             الرئيسية
                         </a>
                         <a href="#" class="text-gray-600 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">
@@ -103,7 +103,7 @@
                                 x-transition:enter-end="transform opacity-100 scale-100"
                                 class="absolute left-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 z-50">
                                 
-                                <a href="{% url 'accounts:profile_dashboard' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-right font-bold border-b border-gray-50">
+                                <a href="{% url 'accounts:dashboard' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-right font-bold border-b border-gray-50">
                                     {{ user.get_role_display }}
                                 </a>
 

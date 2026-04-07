@@ -275,6 +275,8 @@ class StudentProfile(RoleValidatedProfileMixin, models.Model):
         validators=[egyptian_phone_validator], 
         max_length=11,
         unique=True,
+        null=True,
+        blank=True,
         help_text=_("مثال: 010xxxxxxxx")
     )
     
