@@ -13,8 +13,8 @@ urlpatterns = [
     path('logout/', views.UserLogoutView.as_view(), name='logout'),
     
     # Email Verification
-    path('verify-email/<str:token>/', views.EmailVerificationView.as_view(), name='verify_email'),
-    path('resend-verification/', views.ResendVerificationEmailView.as_view(), name='resend_verification'),
+    # path('verify-email/<str:token>/', views.EmailVerificationView.as_view(), name='verify_email'),
+    # path('resend-verification/', views.ResendVerificationEmailView.as_view(), name='resend_verification'),
     
     # Password Reset
     path('password-reset/', views.CustomPasswordResetView.as_view(), name='password_reset'),

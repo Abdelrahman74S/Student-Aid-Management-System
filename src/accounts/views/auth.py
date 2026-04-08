@@ -36,45 +36,45 @@ class RegisterView(CreateView):
         user = form.save(commit=False)
         user.role = User.Role.STUDENT
         user.is_active = True  
-        user.is_verified = False
+        user.is_verified = True
         user.save()
 
 
-        self.send_verification_email(user)
+        # self.send_verification_email(user)
 
         success_message = (
             "تم إنشاء الحساب بنجاح! "
-            "يرجى التحقق من بريدك الإلكتروني لتفعيل الحساب."
+            # "يرجى التحقق من بريدك الإلكتروني لتفعيل الحساب."
         )
 
         messages.success(self.request, success_message)
         return redirect(self.success_url)
 
-    def send_verification_email(self, user):
-        token = email_verification_token.make_token(user)
-        uid = urlsafe_base64_encode(force_bytes(user.pk))
+    # def send_verification_email(self, user):
+    #     token = email_verification_token.make_token(user)
+    #     uid = urlsafe_base64_encode(force_bytes(user.pk))
 
-        current_site = get_current_site(self.request)
-        verification_url = reverse('accounts:verify_email', kwargs={
-            'token': f"{uid}-{token}"
-        })
+    #     current_site = get_current_site(self.request)
+    #     verification_url = reverse('accounts:verify_email', kwargs={
+    #         'token': f"{uid}-{token}"
+    #     })
 
-        full_url = f"https://{current_site.domain}{verification_url}"
+    #     full_url = f"https://{current_site.domain}{verification_url}"
 
-        subject = 'تفعيل حسابك - نظام المساعدات الطلابية'
-        message = render_to_string('accounts/emails/verification_email.html', {
-            'user': user,
-            'verification_url': full_url,
-        })
+    #     subject = 'تفعيل حسابك - نظام المساعدات الطلابية'
+    #     message = render_to_string('accounts/emails/verification_email.html', {
+    #         'user': user,
+    #         'verification_url': full_url,
+    #     })
 
-        send_mail(
-            subject=subject,
-            message='',
-            html_message=message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[user.email],
-            fail_silently=False,
-        )
+    #     send_mail(
+    #         subject=subject,
+    #         message='',
+    #         html_message=message,
+    #         from_email=settings.DEFAULT_FROM_EMAIL,
+    #         recipient_list=[user.email],
+    #         fail_silently=False,
+    #     )
 
 
 class UserLoginView(FormView):
@@ -121,83 +121,83 @@ class UserLogoutView(LoginRequiredMixin,View):
         return redirect('accounts:login')
 
 
-class EmailVerificationView(View):
-    template_name = 'accounts/verification_result.html'
+# class EmailVerificationView(View):
+#     template_name = 'accounts/verification_result.html'
 
-    def get(self, request, token, *args, **kwargs):
-        try:
-            uidb64, token_key = token.split('-', 1)
-            uid = force_str(urlsafe_base64_decode(uidb64))
-            user = User.objects.get(pk=uid)
-        except (ValueError, TypeError, OverflowError, User.DoesNotExist):
-            user = None
+#     def get(self, request, token, *args, **kwargs):
+#         try:
+#             uidb64, token_key = token.split('-', 1)
+#             uid = force_str(urlsafe_base64_decode(uidb64))
+#             user = User.objects.get(pk=uid)
+#         except (ValueError, TypeError, OverflowError, User.DoesNotExist):
+#             user = None
 
-        context = {}
+#         context = {}
 
-        if user is not None and email_verification_token.check_token(user, token_key):
-            if not user.is_verified:
-                user.is_verified = True
-                user.save()
-                context['success'] = True
-                context['message'] = "تم تفعيل حسابك بنجاح! يمكنك الآن تسجيل الدخول."
-            else:
-                context['success'] = True
-                context['message'] = "الحساب مفعل مسبقاً."
-        else:
-            context['success'] = False
-            context['message'] = "رابط التفعيل غير صالح أو منتهي الصلاحية."
+#         if user is not None and email_verification_token.check_token(user, token_key):
+#             if not user.is_verified:
+#                 user.is_verified = True
+#                 user.save()
+#                 context['success'] = True
+#                 context['message'] = "تم تفعيل حسابك بنجاح! يمكنك الآن تسجيل الدخول."
+#             else:
+#                 context['success'] = True
+#                 context['message'] = "الحساب مفعل مسبقاً."
+#         else:
+#             context['success'] = False
+#             context['message'] = "رابط التفعيل غير صالح أو منتهي الصلاحية."
 
-        return render(request, self.template_name, context)
+#         return render(request, self.template_name, context)
 
 
-class ResendVerificationEmailView(View):
-    def post(self, request, *args, **kwargs):
-        email = request.POST.get('email', '').strip().upper()
+# class ResendVerificationEmailView(View):
+#     def post(self, request, *args, **kwargs):
+#         email = request.POST.get('email', '').strip().upper()
 
-        try:
-            user = User.objects.get(email=email, is_verified=False)
-            self.send_verification_email(user)
-            message = "تم إرسال رابط التفعيل الجديد إلى بريدك الإلكتروني."
-            success = True
-        except User.DoesNotExist:
-            message = "إذا كان البريد الإلكتروني مسجلاً وغير مفعل، فسيتم إرسال رابط التفعيل."
-            success = True  
+#         try:
+#             user = User.objects.get(email=email, is_verified=False)
+#             self.send_verification_email(user)
+#             message = "تم إرسال رابط التفعيل الجديد إلى بريدك الإلكتروني."
+#             success = True
+#         except User.DoesNotExist:
+#             message = "إذا كان البريد الإلكتروني مسجلاً وغير مفعل، فسيتم إرسال رابط التفعيل."
+#             success = True  
 
-        messages.success(request, message)
-        return redirect('accounts:login')
+#         messages.success(request, message)
+#         return redirect('accounts:login')
 
-    def get(self, request, *args, **kwargs):
-        return render(request, 'accounts/resend_verification.html')
+#     def get(self, request, *args, **kwargs):
+#         return render(request, 'accounts/resend_verification.html')
 
-    def send_verification_email(self, user):
-        from django.contrib.sites.shortcuts import get_current_site
-        from django.template.loader import render_to_string
-        from django.core.mail import send_mail
+#     def send_verification_email(self, user):
+#         from django.contrib.sites.shortcuts import get_current_site
+#         from django.template.loader import render_to_string
+#         from django.core.mail import send_mail
 
-        token = email_verification_token.make_token(user)
-        uid = urlsafe_base64_encode(force_bytes(user.pk))
+#         token = email_verification_token.make_token(user)
+#         uid = urlsafe_base64_encode(force_bytes(user.pk))
 
-        current_site = get_current_site(self.request)
-        verification_url = reverse('accounts:verify_email', kwargs={
-            'token': f"{uid}-{token}"
-        })
+#         current_site = get_current_site(self.request)
+#         verification_url = reverse('accounts:verify_email', kwargs={
+#             'token': f"{uid}-{token}"
+#         })
 
-        full_url = f"https://{current_site.domain}{verification_url}"
+#         full_url = f"https://{current_site.domain}{verification_url}"
 
-        subject = 'تفعيل حسابك - نظام المساعدات الطلابية'
-        message = render_to_string('accounts/emails/verification_email.html', {
-            'user': user,
-            'verification_url': full_url,
-        })
+#         subject = 'تفعيل حسابك - نظام المساعدات الطلابية'
+#         message = render_to_string('accounts/emails/verification_email.html', {
+#             'user': user,
+#             'verification_url': full_url,
+#         })
 
-        send_mail(
-            subject=subject,
-            message='',
-            html_message=message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[user.email],
-            fail_silently=False,
-        )
+#         send_mail(
+#             subject=subject,
+#             message='',
+#             html_message=message,
+#             from_email=settings.DEFAULT_FROM_EMAIL,
+#             recipient_list=[user.email],
+#             fail_silently=False,
+#         )
 
 
 class CustomPasswordResetView(PasswordResetView):

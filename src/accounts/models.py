@@ -152,7 +152,7 @@ class User(AbstractUser):
 
     is_verified = models.BooleanField(
         _('حالة التوثيق'),
-        default=False, 
+        default=True, 
         help_text=_("تشير إلى ما إذا كان المستخدم قد قام بتفعيل البريد الإلكتروني.")
     )
     
