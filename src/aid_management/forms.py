@@ -1,29 +1,23 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
-from jsonschema import ValidationError
-from .models import AidApplication, SupportCycle, ScoringRule, CommitteeReview
+from .models import AidApplication, ScoringRule, CommitteeReview
 import json
 
 
-# ==============================
-# 1. نموذج تقديم الطالب
-# ==============================
+# ==========================================
+# 1. نموذج تقديم الطالب (Student Interface)
+# ==========================================
 class StudentApplicationForm(forms.ModelForm):
+
     father_income = forms.DecimalField(
         label=_("دخل الأب الشهري"),
         min_value=0,
-        widget=forms.NumberInput(attrs={
-            'class': 'form-control',
-            'placeholder': '0.00'
-        })
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0.00'})
     )
     mother_income = forms.DecimalField(
         label=_("دخل الأم الشهري"),
         min_value=0,
-        widget=forms.NumberInput(attrs={
-            'class': 'form-control',
-            'placeholder': '0.00'
-        })
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0.00'})
     )
     family_members = forms.IntegerField(
         label=_("عدد أفراد الأسرة"),
@@ -46,11 +40,8 @@ class StudentApplicationForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        data = {}
         if self.instance and self.instance.pk and self.instance.financial_assessment:
             data = self.instance.financial_assessment
-
-        if data:
             self.fields['father_income'].initial = data.get('father_income')
             self.fields['mother_income'].initial = data.get('mother_income')
             self.fields['family_members'].initial = data.get('family_members')
@@ -58,33 +49,29 @@ class StudentApplicationForm(forms.ModelForm):
 
     def save(self, commit=True):
         instance = super().save(commit=False)
-
         instance.financial_assessment = {
             'father_income': str(self.cleaned_data['father_income']),
             'mother_income': str(self.cleaned_data['mother_income']),
             'family_members': self.cleaned_data['family_members'],
             'housing_status': self.cleaned_data['housing_status'],
         }
-
         if commit:
             instance.save()
         return instance
-    
 
-# ==============================
-# 2. نموذج مراجعة اللجنة
-# ==============================
+
+# ==========================================
+# 2. نموذج تقييم اللجنة (Reviewer Interface)
+# ==========================================
 class CommitteeReviewForm(forms.ModelForm):
+
     class Meta:
         model = CommitteeReview
         fields = ['conflict_of_interest', 'qualitative_notes']
+        readonly = ['profile_snapshot',]
         widgets = {
-            'conflict_of_interest': forms.CheckboxInput(
-                attrs={'class': 'form-check-input'}
-            ),
-            'qualitative_notes': forms.Textarea(
-                attrs={'class': 'form-control', 'rows': 3}
-            ),
+            'conflict_of_interest': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'qualitative_notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -95,7 +82,7 @@ class CommitteeReviewForm(forms.ModelForm):
             rules = ScoringRule.objects.filter(
                 cycle=self.application.cycle,
                 is_active=True
-            ).select_related('cycle')
+            ).order_by('priority')
 
             for rule in rules:
                 field_name = f"score_{rule.criteria_type.lower()}"
@@ -105,8 +92,8 @@ class CommitteeReviewForm(forms.ModelForm):
                     max_value=rule.points,
                     required=True,
                     widget=forms.NumberInput(attrs={'class': 'form-control'}),
-                    help_text=_("الحد الأقصى للنقاط: %(pts)s") % {
-                        'pts': rule.points
+                    help_text=_("الأقصى: %(pts)s | الوزن: %(w)s") % {
+                        'pts': rule.points, 'w': rule.weight
                     }
                 )
             
@@ -118,7 +105,7 @@ class CommitteeReviewForm(forms.ModelForm):
 
     def save(self, commit=True):
         instance = super().save(commit=False)
-
+        
         dimension_scores = {}
         for field_name, value in self.cleaned_data.items():
             if field_name.startswith('score_'):
@@ -126,8 +113,8 @@ class CommitteeReviewForm(forms.ModelForm):
                 dimension_scores[dimension_key] = value
 
         instance.dimension_scores = dimension_scores
+        instance.calculate_total()
 
         if commit:
             instance.save()
         return instance
-

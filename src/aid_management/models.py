@@ -252,6 +252,7 @@ class AidApplication(models.Model):
     updated_at = models.DateTimeField(
         auto_now=True, verbose_name=_("آخر تحديث")
     )
+    
     profile_snapshot = models.JSONField(default=dict, blank=True)
     
     def freeze_student_data(self):
@@ -329,6 +330,32 @@ class AidApplication(models.Model):
 
     def __str__(self):
         return self.serial_number or _("طلب غير مكتمل (%(id)s)") % {'id': self.id}
+    
+    def can_transition_to(self, new_status):
+        current = self.status
+        
+        allowed_transitions = {
+            'DRAFT': ['SUBMITTED'],                     # المسودة تذهب للتقديم فقط
+            'SUBMITTED': ['UNDER_REVIEW', 'DRAFT'],     # المقدم يراجع أو يعاد لمسودة (بقرار أدمن)
+            'UNDER_REVIEW': ['SCORED'],                 # تحت المراجعة تذهب للتقييم
+            'SCORED': ['APPROVED', 'REJECTED'],         # التقييم ينتهي بقبول أو رفض
+            'APPROVED': ['DISBURSED'],                  # المقبول يذهب للصرف
+            'REJECTED': ['DRAFT'],                      # المرفوض قد يسمح له بالتعديل في دورة أخرى
+        }
+        
+        return new_status in allowed_transitions.get(current, [])
+
+    def transition_to(self, new_status, user=None):
+        if not self.can_transition_to(new_status):
+            raise ValidationError(f"لا يمكن الانتقال من {self.get_status_display()} إلى {new_status}")
+            
+        self.status = new_status
+        if new_status == 'SUBMITTED':
+            self.submission_date = timezone.now()
+        elif new_status in ['APPROVED', 'REJECTED']:
+            self.decision_date = timezone.now()
+            
+        self.save()
 
     class Meta:
         verbose_name = _("طلب مساعدة")
