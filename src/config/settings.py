@@ -38,7 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     
     'accounts',
-    # 'aid_management',
+    'aid_management',
     
     'tailwind',
     'theme',

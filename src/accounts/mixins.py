@@ -12,6 +12,8 @@ class RoleRequiredMixin(AccessMixin):
         if request.user.role not in self.allowed_roles:
             messages.error(request, "عذراً، ليس لديك الصلاحية للوصول إلى هذه الصفحة.")
             return redirect('accounts:dashboard_redirect')
+        
+        
             
         return super().dispatch(request, *args, **kwargs)
 
@@ -30,3 +32,17 @@ class AuditorRequiredMixin(RoleRequiredMixin):
 
 class StaffRequiredMixin(RoleRequiredMixin):
     allowed_roles = [UserRoles.REVIEWER, UserRoles.COMMITTEE_HEAD, UserRoles.ADMIN]
+    
+
+class ReviewerProgramRequiredMixin(ReviewerRequiredMixin):
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        if response.status_code != 200: return response
+        
+        application = self.get_object() 
+        reviewer_profile = request.user.reviewer_profile
+        
+        if not reviewer_profile.assigned_programs.filter(id=application.student.program_id).exists():
+            messages.error(request, "ليس لديك صلاحية لمراجعة طلاب هذا القسم.")
+            return redirect('accounts:dashboard_redirect')
+        return response

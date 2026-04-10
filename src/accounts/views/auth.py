@@ -120,7 +120,6 @@ class UserLogoutView(LoginRequiredMixin,View):
     def get(self, request, *args, **kwargs):
         return redirect('accounts:login')
 
-
 # class EmailVerificationView(View):
 #     template_name = 'accounts/verification_result.html'
 

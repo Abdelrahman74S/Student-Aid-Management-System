@@ -1,6 +1,3 @@
-from django.db import models
-
-# Create your models here.
 import uuid
 from typing import Optional
 from django.db import models
@@ -59,7 +56,6 @@ class RoleValidatedProfileMixin(models.Model):
             )
     
     def save(self, *args, **kwargs):
-        self.full_clean()
         super().save(*args, **kwargs)
 
 
@@ -82,23 +78,22 @@ class UserQuerySet(models.QuerySet):
 
 
 class UserManager(BaseUserManager):
-    def get_queryset(self):
-        return UserQuerySet(self.model, using=self._db)
-
     def create_user(self, email, password=None, **extra_fields):
-        if not email:
-            raise ValueError(_('يجب تزويد البريد الإلكتروني'))
-        
-        email = self.normalize_email(email).lower()
-        local, domain = email.split('@')
-        
-        normalized_email = f"{local.upper()}@{domain.lower()}"
-        extra_fields['username'] = local.upper()
-        
-        user = self.model(email=normalized_email, **extra_fields)
-        user.set_password(password)
-        user.save(using=self._db)
-        return user
+            if not email:
+                raise ValueError(_('يجب تزويد البريد الإلكتروني'))
+            
+            role = extra_fields.get('role')
+            if role in [UserRoles.COMMITTEE_HEAD, UserRoles.REVIEWER, UserRoles.ADMIN]:
+                extra_fields.setdefault('is_staff', True)
+            
+            email = self.normalize_email(email).lower()
+            local, _ = email.split('@')
+            
+            extra_fields.setdefault('username', local)
+            user = self.model(email=email, **extra_fields)
+            user.set_password(password)
+            user.save(using=self._db)
+            return user
 
     def create_superuser(self, email, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
@@ -180,14 +175,12 @@ class User(AbstractUser):
         ]
 
     def save(self, *args, **kwargs):
-        if self.email and '@' in self.email:
-            local, domain = self.email.split('@')
-            self.email = f"{local.lower()}@{domain.lower()}"
-    
-            if not self.username:
-                self.username = local.lower()
-    
-        super().save(*args, **kwargs)
+            if self.email:
+                self.email = self.email.lower()
+                local = self.email.split('@')[0]
+                if not self.username:
+                    self.username = local
+            super().save(*args, **kwargs)
         
     
     def get_full_name(self):
@@ -467,3 +460,8 @@ class AuditorProfile(RoleValidatedProfileMixin, models.Model):
 
     def __str__(self):
         return f"المراقب: {self.user.full_name}"
+
+
+class SerialCounter(models.Model):
+    key = models.CharField(max_length=50, unique=True)
+    last_value = models.PositiveIntegerField(default=0)

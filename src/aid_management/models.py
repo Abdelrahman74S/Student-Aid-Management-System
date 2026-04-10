@@ -4,7 +4,13 @@ from django.conf import settings
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
-from accounts.models import StudentProfile
+from accounts.models import SerialCounter, StudentProfile
+
+
+def validate_financial_data(value):
+    required_keys = ['father_income', 'mother_income', 'family_members', 'housing_status']
+    if not all(key in value for key in required_keys):
+        raise ValidationError(_("بيانات التقييم المالي غير مكتملة."))
 
 
 # ==============================
@@ -181,11 +187,11 @@ class SupportCycle(models.Model):
         ordering = ['-created_at']
 
 
+
 # ==============================
 # AidApplication
 # ==============================
 class AidApplication(models.Model):
-
     STATUS_CHOICES = [
         ('DRAFT', _('مسودة')),
         ('SUBMITTED', _('تم التقديم')),
@@ -217,7 +223,7 @@ class AidApplication(models.Model):
         default='DRAFT', verbose_name=_("الحالة")
     )
     financial_assessment = models.JSONField(
-        default=dict, blank=True, verbose_name=_("التقييم المالي")
+        default=dict, blank=True, validators=[validate_financial_data], verbose_name=_("التقييم المالي")
     )
     committee_decision = models.TextField(
         blank=True, verbose_name=_("قرار اللجنة")
@@ -246,6 +252,22 @@ class AidApplication(models.Model):
     updated_at = models.DateTimeField(
         auto_now=True, verbose_name=_("آخر تحديث")
     )
+    profile_snapshot = models.JSONField(default=dict, blank=True)
+    
+    def freeze_student_data(self):
+        profile = self.student
+    
+        self.profile_snapshot = {
+            'gpa': str(profile.gpa),
+            'level': profile.level,
+            'program': {
+                'id': profile.program.id if profile.program else None,
+                'name': profile.program.name if profile.program else "N/A"
+            },
+            'disability_status': profile.disability_status,
+        }
+    
+        self.save(update_fields=['profile_snapshot'])
 
     @property
     def is_deleted(self):
@@ -254,10 +276,15 @@ class AidApplication(models.Model):
     def generate_serial(self):
         with transaction.atomic():
             year = timezone.now().year
-            count = AidApplication.objects.select_for_update().filter(
-                submission_date__year=year
-            ).count() + 1
-            return f"طلب-{year}-{str(count).zfill(5)}"
+            counter_key = f"application_{year}"
+            
+            counter, created = SerialCounter.objects.get_or_create(key=counter_key)
+            counter = SerialCounter.objects.select_for_update().get(key=counter_key)
+            
+            counter.last_value += 1
+            counter.save()
+            
+            return f"طلب-{year}-{str(counter.last_value).zfill(5)}"
 
     @staticmethod
     def _extract_ip(request):
@@ -567,25 +594,32 @@ class BudgetAllocation(models.Model):
     def remaining_amount(self):
         return self.amount_allocated - self.amount_disbursed
 
+
+
     def clean(self):
         errors = {}
-
+    
         if self.amount_allocated is not None and self.cycle_id:
-            available = (
-                self.cycle.total_budget
-                - self.cycle.reserved_budget
-                - self.cycle.disbursed_budget
-            )
-            if self.pk:
-                old = BudgetAllocation.objects.filter(pk=self.pk).first()
-                if old:
-                    available += old.amount_allocated
-
-            if self.amount_allocated > available:
-                errors['amount_allocated'] = _(
-                    "المبلغ (%(amount)s) يتجاوز المتاح (%(available)s)."
-                ) % {'amount': self.amount_allocated, 'available': available}
-
+            with transaction.atomic():
+                current_cycle = SupportCycle.objects.select_for_update().get(pk=self.cycle_id)
+                
+                adjustment = self.amount_allocated
+                if self.pk:
+                    old_allocation = BudgetAllocation.objects.filter(pk=self.pk).first()
+                    if old_allocation:
+                        adjustment -= old_allocation.amount_allocated
+    
+                available_capacity = (
+                    current_cycle.total_budget
+                    - current_cycle.reserved_budget
+                    - current_cycle.disbursed_budget
+                )
+    
+                if adjustment > available_capacity:
+                    errors['amount_allocated'] = _(
+                        "المبلغ (%(amount)s) يتجاوز الميزانية المتاحة (%(available)s)."
+                    ) % {'amount': self.amount_allocated, 'available': available_capacity}
+    
         if (
             self.amount_disbursed is not None
             and self.amount_allocated is not None
@@ -594,23 +628,24 @@ class BudgetAllocation(models.Model):
             errors['amount_disbursed'] = _(
                 "المبلغ المصروف لا يمكن أن يتجاوز المخصص."
             )
-
+    
         amount_disbursed = self.amount_disbursed or 0
-
+    
+        
         if self.disbursement_date and amount_disbursed <= 0:
             errors['disbursement_date'] = _(
                 "لا يمكن تحديد تاريخ بدون مبلغ مصروف."
             )
-
+    
         if amount_disbursed > 0 and not self.disbursement_date:
             errors['disbursement_date'] = _("يجب تحديد تاريخ الصرف.")
-
+    
         if self.application_id and self.application:
             if self.application.status not in ('APPROVED', 'DISBURSED'):
                 errors['application'] = _(
                     "يمكن التخصيص فقط للطلبات المقبولة."
                 )
-
+    
         if errors:
             raise ValidationError(errors)
 
