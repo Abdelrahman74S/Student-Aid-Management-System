@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}نتيجة الطلب | جامعة طنطا{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto py-16 px-4 font-cairo" dir="rtl">
+    
+    <div class="text-center mb-10">
+        <div class="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm border border-red-100">
+            <span class="text-5xl">📋</span>
+        </div>
+        <h1 class="text-3xl font-black text-gray-900 font-tajawal">حالة طلب المساعدة</h1>
+        <p class="text-gray-500 mt-2">بخصوص الطلب رقم <span class="font-mono font-bold text-red-600">{{ application.serial_number }}</span></p>
+    </div>
+
+    <div class="bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
+        <div class="bg-red-600 px-8 py-6 flex items-center gap-6">
+            <div class="w-12 h-12 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center shrink-0">
+                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </div>
+            <div>
+                <h2 class="text-white font-black text-xl">نعتذر، لم يتم قبول الطلب حالياً</h2>
+                <p class="text-red-100 text-sm">دورة: {{ application.cycle.name }}</p>
+            </div>
+        </div>
+
+        <div class="p-8 md:p-12">
+            <p class="text-gray-700 leading-relaxed mb-8 text-lg font-tajawal">
+                عزيزي الطالب <span class="font-bold text-gray-900">{{ application.student.user.get_full_name }}</span>، نشكرك على ثقتك بنا. نود إفادتك بأن اللجنة المختصة قد انتهت من مراجعة طلبك، وبناءً على المعايير المعتمدة، نعتذر عن عدم إمكانية صرف المساعدة في الوقت الحالي.
+            </p>
+
+            <div class="bg-gray-50 rounded-2xl p-6 border-r-4 border-red-500 mb-10 shadow-sm">
+                <div class="flex items-center gap-2 mb-3">
+                    <svg class="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span class="font-bold text-gray-600 text-sm">توضيح اللجنة المختصة:</span>
+                </div>
+                <p class="text-gray-800 leading-7 pr-2">
+                    {{ application.committee_decision|default:"نعتذر، نظراً لمحدودية الميزانية وتطبيق معايير الأولوية، لم يتم اختيار الطلب في هذه الدورة. يمكنك التقديم مجدداً في الدورات القادمة." }}
+                </p>
+            </div>
+
+            <div class="bg-blue-50 rounded-2xl p-6 border border-blue-100 mb-10">
+                <h4 class="text-blue-800 font-bold mb-3 flex items-center gap-2 text-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    خطوات يمكنك القيام بها:
+                </h4>
+                <ul class="text-xs text-blue-700 space-y-3 list-disc list-inside leading-5">
+                    <li>التأكد من تحديث بياناتك المالية (مفردات المرتب/البحث الاجتماعي) في الدورة القادمة.</li>
+                    <li>التواصل مع مكتب رعاية الشباب بالكلية للاستفسار عن أي برامج دعم أخرى.</li>
+                    <li>التقديم في "الدورة التكميلية" في حال تم الإعلان عنها رسمياً.</li>
+                </ul>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-4">
+                <a href="{% url 'accounts:dashboard' %}" class="flex-1 bg-gray-900 hover:bg-black text-white text-center py-4 rounded-2xl font-black transition-all shadow-lg shadow-gray-200">
+                    العودة للوحة التحكم
+                </a>
+                <a href="#" class="flex-1 bg-white border-2 border-gray-200 text-gray-600 text-center py-4 rounded-2xl font-bold hover:bg-gray-50 transition-all">
+                    تقديم تظلم (قريباً)
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <p class="text-center text-gray-400 text-xs mt-8">نظام إدارة المساعدات الطلابية - جامعة طنطا | تاريخ القرار: {{ application.decision_date|date:"d M Y" }}</p>
+</div>
+{% endblock %}

@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="max-w-3xl mx-auto py-16 px-4 font-cairo" dir="rtl">
+    
+    <div class="text-center mb-10">
+        <div class="w-24 h-24 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner animate-bounce">
+            <span class="text-5xl">🎊</span>
+        </div>
+        <h1 class="text-3xl font-black text-gray-900 font-tajawal">تهانينا، تمت الموافقة!</h1>
+        <p class="text-gray-500 mt-2">تم اعتماد صرف الدعم المالي لطلبك رقم <span class="font-mono font-bold text-emerald-700">{{ application.serial_number }}</span></p>
+    </div>
+
+    <div class="relative bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden print:shadow-none print:border-2">
+        <div class="absolute top-0 right-0 w-2 h-full bg-emerald-500"></div>
+
+        <div class="p-8 md:p-12">
+            <div class="flex flex-col items-center justify-center bg-emerald-50 rounded-2xl py-8 mb-10 border border-emerald-100">
+                <span class="text-emerald-700 font-bold mb-2">قيمة المساعدة المعتمدة</span>
+                <div class="flex items-baseline gap-2">
+                    <span class="text-5xl font-black text-emerald-900">
+                        {{ application.allocations.first.amount_allocated|default:"0.00" }}
+                    </span>
+                    <span class="text-xl font-bold text-emerald-700">جنيه مصري</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+                <div class="p-5 bg-gray-50 rounded-2xl border border-gray-100">
+                    <div class="flex items-center gap-3 mb-2">
+                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path></svg>
+                        <span class="text-xs font-bold text-gray-400">جهة الصرف:</span>
+                    </div>
+                    <span class="font-bold text-gray-800">خزينة الكلية - جامعة طنطا</span>
+                </div>
+
+                <div class="p-5 bg-gray-50 rounded-2xl border border-gray-100">
+                    <div class="flex items-center gap-3 mb-2">
+                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        <span class="text-xs font-bold text-gray-400">تاريخ الاعتماد:</span>
+                        </div>
+                    <span class="font-bold text-gray-800 font-mono">{{ application.decision_date|date:"Y-m-d" }}</span>
+                </div>
+            </div>
+
+            <div class="bg-gray-900 rounded-2xl p-6 text-white flex items-start gap-4 shadow-xl">
+                <div class="bg-white/10 p-2 rounded-lg">
+                    <svg class="w-5 h-5 text-emerald-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
+                </div>
+                <div>
+                    <p class="text-sm font-bold mb-2">تعليمات هامة عند الصرف:</p>
+                    <ul class="text-xs text-gray-400 space-y-2 list-disc list-inside">
+                        <li>إحضار أصل بطاقة الرقم القومي (سارية).</li>
+                        <li>إحضار كارنيه الكلية للعام الجامعي الحالي.</li>
+                        <li>يتم الصرف لشخص الطالب حصراً ولا يُعتد بالتوكيلات.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-gray-50 p-6 flex gap-4 border-t border-gray-100 print:hidden">
+            <button onclick="window.print()" class="flex-1 bg-white border-2 border-gray-200 text-gray-700 py-4 rounded-2xl font-black hover:bg-gray-100 transition-all flex items-center justify-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 00-2 2h2m2 4h10a2 2 0 002-2v-4a2 2 0 012-2h10a2 2 0 012 2v4a2 2 0 002 2zm-10-4h.01m-6 0h.01"></path></svg>
+                طباعة القسيمة
+            </button>
+            <a href="{% url 'accounts:dashboard' %}" class="flex-1 bg-emerald-600 text-white text-center py-4 rounded-2xl font-black hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200">
+                العودة للرئيسية
+            </a>
+        </div>
+    </div>
+    
+    <p class="text-center text-gray-400 text-xs mt-8">نظام إدارة المساعدات الطلابية - جامعة طنطا | الرقم المرجعي للعملية: {{ application.id }}</p>
+</div>
+{% endblock %}

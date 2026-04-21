@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% block title %}قائمة ترتيب المستحقين | جامعة طنطا{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto py-10 px-4 font-cairo" dir="rtl">
+    
+    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 gap-6 bg-white p-8 rounded-[2.5rem] shadow-xl border border-gray-100">
+        <div>
+            <h1 class="text-3xl font-black text-gray-900 flex items-center gap-3">
+                <span class="w-2 h-10 bg-emerald-600 rounded-full"></span>
+                ترتيب استحقاق المساعدات
+            </h1>
+            <p class="text-gray-500 mt-2 font-medium">بناءً على نتائج التقييم الفني والاجتماعي للدورة الحالية.</p>
+        </div>
+        
+        <div class="flex items-center gap-6 bg-emerald-50 p-4 rounded-2xl border border-emerald-100">
+            <div class="text-center px-4 border-l border-emerald-200">
+                <p class="text-[10px] font-black text-emerald-600 uppercase mb-1">الميزانية المتاحة</p>
+                <p class="text-xl font-black text-emerald-900">{{ active_cycle.available_budget }} <span class="text-xs">ج.م</span></p>
+            </div>
+            <div class="text-center px-4">
+                <p class="text-[10px] font-black text-emerald-600 uppercase mb-1">إجمالي المتقدمين</p>
+                <p class="text-xl font-black text-emerald-900">{{ applications|length }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-[2.5rem] shadow-2xl border border-gray-100 overflow-hidden">
+        <table class="w-full text-right">
+            <thead>
+                <tr class="bg-gray-50 border-b border-gray-100">
+                    <th class="p-6 font-black text-gray-600 text-sm">الترتيب</th>
+                    <th class="p-6 font-black text-gray-600 text-sm">الطالب</th>
+                    <th class="p-6 font-black text-gray-600 text-sm">المجموع (Score)</th>
+                    <th class="p-6 font-black text-gray-600 text-sm">الحالة الاجتماعية</th>
+                    <th class="p-6 font-black text-gray-600 text-sm">حالة الطلب</th>
+                    <th class="p-6 font-black text-gray-600 text-sm text-center">الإجراء النهائي</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">
+                {% for app in applications %}
+                <tr class="hover:bg-blue-50/30 transition-all group">
+                    <td class="p-6">
+                        <div class="w-10 h-10 rounded-xl flex items-center justify-center font-black 
+                            {% if forloop.counter <= 3 %} bg-emerald-100 text-emerald-700 {% else %} bg-gray-100 text-gray-500 {% endif %}">
+                            {{ forloop.counter }}
+                        </div>
+                    </td>
+                    
+                    <td class="p-6">
+                        <div class="font-black text-gray-900">{{ app.student.user.get_full_name }}</div>
+                        <div class="text-xs text-gray-400 font-mono mt-1">{{ app.serial_number }}</div>
+                    </td>
+
+                    <td class="p-6">
+                        <div class="flex items-center gap-2">
+                            <span class="text-lg font-black text-blue-600">{{ app.total_score }}</span>
+                            <span class="text-[10px] text-gray-400 font-bold">نقطة</span>
+                        </div>
+                    </td>
+
+                    <td class="p-6">
+                        <div class="text-xs space-y-1">
+                            <div class="flex gap-2">
+                                <span class="text-gray-400">الدخل:</span>
+                                <span class="font-bold text-gray-700">{{ app.financial_assessment.total_income }} ج.م</span>
+                            </div>
+                            <div class="flex gap-2">
+                                <span class="text-gray-400">الأسرة:</span>
+                                <span class="font-bold text-gray-700">{{ app.financial_assessment.family_members }} أفراد</span>
+                            </div>
+                        </div>
+                    </td>
+
+                    <td class="p-6">
+                        {% if app.status == 'SCORED' %}
+                            <span class="bg-amber-100 text-amber-700 px-4 py-1.5 rounded-full text-xs font-black">انتظار القرار</span>
+                        {% elif app.status == 'APPROVED' %}
+                            <span class="bg-emerald-100 text-emerald-700 px-4 py-1.5 rounded-full text-xs font-black">تم القبول</span>
+                        {% elif app.status == 'REJECTED' %}
+                            <span class="bg-red-100 text-red-700 px-4 py-1.5 rounded-full text-xs font-black">مرفوض</span>
+                        {% endif %}
+                    </td>
+
+                    <td class="p-6 text-center">
+                        {% if app.status == 'SCORED' %}
+                            <a href="{% url 'aid_management:final_decision' app.id %}" class="inline-block bg-blue-600 text-white px-6 py-2.5 rounded-xl text-xs font-black hover:bg-blue-700 transition-all shadow-lg shadow-blue-100">
+                                اتخاذ قرار
+                            </a>
+                        {% else %}
+                            <a href="{% url 'aid_management:application_detail' app.id %}" class="text-xs font-bold text-gray-400 hover:text-blue-600 underline">عرض التفاصيل</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="p-20 text-center text-gray-400 font-bold italic">لا توجد طلبات تم تقييمها في هذه الدورة حتى الآن.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mt-8 bg-gray-900 p-6 rounded-3xl text-white flex justify-between items-center shadow-2xl">
+        <div class="flex items-center gap-4">
+            <div class="bg-white/10 p-3 rounded-2xl">💡</div>
+            <p class="text-sm font-medium text-gray-300">يتم ترتيب الطلاب تنازلياً حسب المجموع الكلي لضمان الأولوية للأكثر استحقاقاً.</p>
+        </div>
+        <button onclick="window.print()" class="bg-white/10 hover:bg-white/20 text-white px-6 py-2 rounded-xl text-xs font-bold transition-all border border-white/10">
+            تصدير كشف الترتيب (PDF)
+        </button>
+    </div>
+</div>
+{% endblock %}

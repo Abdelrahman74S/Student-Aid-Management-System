@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% block title %}تفاصيل طلب المساعدة | جامعة طنطا{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto py-12 px-4 font-cairo" dir="rtl">
+    
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
+        <div>
+            <div class="flex items-center gap-3 mb-2">
+                <span class="px-3 py-1 bg-blue-50 text-blue-700 rounded-lg text-xs font-black border border-blue-100">
+                    {{ application.cycle.name }}
+                </span>
+                <span class="text-gray-400 text-xs font-bold">الرقم المرجعي: {{ application.serial_number }}</span>
+            </div>
+            <h1 class="text-3xl font-black text-gray-900">متابعة حالة الطلب</h1>
+        </div>
+        
+        {% if application.status == 'DRAFT' or application.status == 'SUBMITTED' %}
+        <form action="{% url 'aid_management:student_application_withdraw' application.id %}" method="post" onsubmit="return confirm('هل أنت متأكد من سحب هذا الطلب نهائياً؟');">
+            {% csrf_token %}
+            <button type="submit" class="text-red-500 hover:text-red-700 font-bold text-sm flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                سحب الطلب
+            </button>
+        </form>
+        {% endif %}
+    </div>
+
+    <div class="bg-white p-8 rounded-[2.5rem] shadow-xl border border-gray-100 mb-10">
+        <div class="relative">
+            <div class="absolute top-5 right-0 left-0 h-1 bg-gray-100 rounded-full"></div>
+            <div class="absolute top-5 right-0 h-1 bg-blue-600 rounded-full transition-all duration-1000" 
+                 style="width: {% if application.status == 'SUBMITTED' %}25%{% elif application.status == 'UNDER_REVIEW' or application.status == 'SCORED' %}60%{% elif application.status == 'APPROVED' or application.status == 'REJECTED' or application.status == 'DISBURSED' %}100%{% else %}0%{% endif %};">
+            </div>
+
+            <div class="relative flex justify-between">
+                <div class="flex flex-col items-center">
+                    <div class="w-10 h-10 {% if application.status != 'DRAFT' %}bg-blue-600 text-white{% else %}bg-gray-100 text-gray-400{% endif %} rounded-full flex items-center justify-center font-bold z-10 shadow-lg">1</div>
+                    <span class="text-[10px] mt-3 font-black {% if application.status != 'DRAFT' %}text-blue-900{% else %}text-gray-400{% endif %}">تم التقديم</span>
+                </div>
+                <div class="flex flex-col items-center">
+                    <div class="w-10 h-10 {% if application.status == 'UNDER_REVIEW' or application.status == 'SCORED' or application.status == 'APPROVED' or application.status == 'REJECTED' %}bg-blue-600 text-white{% else %}bg-gray-100 text-gray-400{% endif %} rounded-full flex items-center justify-center font-bold z-10">2</div>
+                    <span class="text-[10px] mt-3 font-black {% if application.status == 'UNDER_REVIEW' or application.status == 'SCORED' %}text-blue-900{% else %}text-gray-400{% endif %}">الفحص الفني</span>
+                </div>
+                <div class="flex flex-col items-center">
+                    <div class="w-10 h-10 {% if application.status == 'APPROVED' or application.status == 'REJECTED' or application.status == 'DISBURSED' %}bg-blue-600 text-white{% else %}bg-gray-100 text-gray-400{% endif %} rounded-full flex items-center justify-center font-bold z-10">3</div>
+                    <span class="text-[10px] mt-3 font-black {% if application.status == 'APPROVED' or application.status == 'REJECTED' %}text-blue-900{% else %}text-gray-400{% endif %}">القرار النهائي</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="lg:col-span-2 space-y-8">
+            {% if application.status == 'APPROVED' or application.status == 'DISBURSED' %}
+                <div class="bg-emerald-600 p-8 rounded-[2.5rem] text-white shadow-2xl flex items-center justify-between">
+                    <div>
+                        <h3 class="text-2xl font-black mb-2">تم قبول طلبك! 🎉</h3>
+                        <p class="text-emerald-100 text-sm">المبلغ المعتمد: <span class="font-bold underline">{{ application.allocations.first.amount_allocated }} ج.م</span></p>
+                    </div>
+                    <a href="{% url 'aid_management:approval_detail' application.id %}" class="bg-white text-emerald-700 px-6 py-3 rounded-2xl font-black text-sm hover:bg-emerald-50 transition-all">عرض القسيمة</a>
+                </div>
+            {% elif application.status == 'REJECTED' %}
+                <div class="bg-red-50 p-8 rounded-[2.5rem] border border-red-100 shadow-xl flex items-center gap-6">
+                    <div class="text-4xl">⚠️</div>
+                    <div>
+                        <h3 class="text-xl font-black text-red-800 mb-1">نعتذر، لم يتم القبول</h3>
+                        <p class="text-red-600 text-sm">{{ application.committee_decision|default:"نعتذر، لم تنطبق شروط الاستحقاق في هذه الدورة." }}</p>
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="bg-white p-8 rounded-[2.5rem] shadow-xl border border-gray-100">
+                <h3 class="font-black text-gray-900 mb-6 flex items-center gap-2">
+                    <span class="w-1.5 h-6 bg-blue-600 rounded-full"></span>
+                    البيانات المالية المقدمة
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="p-4 bg-gray-50 rounded-2xl">
+                        <span class="block text-[10px] text-gray-400 uppercase font-black mb-1">دخل الأب</span>
+                        <span class="font-bold text-gray-700">{{ application.financial_assessment.father_income }} ج.م</span>
+                    </div>
+                    <div class="p-4 bg-gray-50 rounded-2xl">
+                        <span class="block text-[10px] text-gray-400 uppercase font-black mb-1">عدد أفراد الأسرة</span>
+                        <span class="font-bold text-gray-700">{{ application.financial_assessment.family_members }} أفراد</span>
+                    </div>
+                    </div>
+            </div>
+        </div>
+
+        <div class="lg:col-span-1">
+            <div class="bg-white p-8 rounded-[2.5rem] shadow-xl border border-gray-100 h-full">
+                <h3 class="font-black text-gray-900 mb-8 flex items-center gap-2">
+                    <span class="w-1.5 h-6 bg-gray-900 rounded-full"></span>
+                    تاريخ التحركات
+                </h3>
+                <div class="space-y-8 relative">
+                    <div class="absolute top-0 bottom-0 right-4 w-0.5 bg-gray-100"></div>
+                    
+                    {% for log in application.history.all %}
+                    <div class="relative pr-10">
+                        <div class="absolute right-2.5 top-1.5 w-3.5 h-3.5 bg-white border-2 border-blue-600 rounded-full z-10"></div>
+                        <div class="text-xs font-black text-blue-600 mb-1">{{ log.to_status_display }}</div>
+                        <p class="text-[10px] text-gray-400 leading-relaxed">{{ log.notes }}</p>
+                        <span class="text-[9px] text-gray-300 font-mono">{{ log.timestamp|date:"d/m/Y - h:i A" }}</span>
+                    </div>
+                    {% empty %}
+                    <p class="text-center text-gray-300 text-xs py-10 font-bold">تم تسجيل الطلب وبانتظار أول إجراء.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% block title %}تقديم طلب دعم مالي | جامعة طنطا{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-12 px-4 font-cairo" dir="rtl">
+    
+    <div class="flex items-center justify-center mb-10 gap-4">
+        <div class="flex flex-col items-center">
+            <div class="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold shadow-lg shadow-blue-100">1</div>
+            <span class="text-xs mt-2 font-bold text-blue-600">تعبئة البيانات</span>
+        </div>
+        <div class="w-16 h-1 bg-gray-200 rounded-full -mt-6"></div>
+        <div class="flex flex-col items-center">
+            <div class="w-10 h-10 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center font-bold">2</div>
+            <span class="text-xs mt-2 font-bold text-gray-400">المراجعة</span>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-[2.5rem] shadow-2xl border border-gray-100 overflow-hidden">
+        <div class="bg-linear-to-l from-blue-900 to-blue-800 p-10 text-white relative">
+            <div class="relative z-10">
+                <h2 class="text-3xl font-black mb-3 font-tajawal">استمارة تقديم طلب الدعم</h2>
+                <p class="text-blue-100 text-sm opacity-90">دورة الدعم: <span class="font-bold text-white">{{ form.instance.cycle.name|default:"الفصل الدراسي الحالي" }}</span></p>
+            </div>
+            <div class="absolute left-10 top-1/2 -translate-y-1/2 opacity-10">
+                <svg class="w-32 h-32" fill="currentColor" viewBox="0 0 20 20"><path d="M9 2a2 2 0 00-2 2v8a2 2 0 002 2h6a2 2 0 002-2V6.414L13.586 2H9z"></path></svg>
+            </div>
+        </div>
+
+        <form method="post" enctype="multipart/form-data" class="p-10 space-y-10">
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+            <div class="bg-red-50 border-r-4 border-red-500 p-4 rounded-xl text-red-700 text-sm">
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+
+            <section>
+                <h3 class="text-lg font-black text-gray-800 mb-6 flex items-center gap-2">
+                    <span class="w-1.5 h-6 bg-blue-600 rounded-full"></span>
+                    المعلومات المالية والاجتماعية
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {% for field in form %}
+                        {% if field.name != 'student' and field.name != 'cycle' %}
+                        <div class="flex flex-col gap-2 group">
+                            <label class="text-sm font-black text-gray-600 mr-1 transition-colors group-focus-within:text-blue-600">
+                                {{ field.label }}
+                            </label>
+                            <div class="relative">
+                                {{ field }}
+                            </div>
+                            {% if field.help_text %}
+                                <p class="text-[10px] text-gray-400 mt-1 leading-relaxed">{{ field.help_text }}</p>
+                            {% endif %}
+                            {% if field.errors %}
+                                <p class="text-xs text-red-500 font-bold mt-1">{{ field.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                        {% else %}
+                            {{ field }}
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </section>
+
+            <div class="bg-blue-50 border-r-4 border-blue-500 p-6 rounded-3xl flex items-start gap-4">
+                <div class="bg-blue-600 text-white p-2 rounded-xl">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <div>
+                    <p class="text-sm text-blue-900 font-black mb-1">تذكير هام بخصوص المرفقات:</p>
+                    <p class="text-xs text-blue-700 leading-relaxed font-bold">
+                        يجب أن تكون جميع المستندات بصيغة PDF وألا يتجاوز حجم الملف 5 ميجابايت. تأكد من وضوح البيانات المرفقة لضمان عدم تأخر الطلب.
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-4 pt-6">
+                <button type="submit" class="flex-2 bg-blue-600 text-white py-5 rounded-2xl font-black text-xl hover:bg-blue-700 shadow-2xl shadow-blue-200 transition-all hover:-translate-y-1 active:scale-95">
+                    إرسال الطلب للاعتماد
+                </button>
+                <a href="{% url 'accounts:dashboard' %}" class="flex-1 px-8 py-5 bg-gray-50 text-gray-500 rounded-2xl font-bold hover:bg-gray-100 transition-all text-center border border-gray-100">
+                    إلغاء والعودة
+                </a>
+            </div>
+        </form>
+    </div>
+    
+    <p class="text-center text-gray-400 text-sm mt-10">نظام إدارة المساعدات الطلابية - جامعة طنطا</p>
+</div>
+{% endblock %}

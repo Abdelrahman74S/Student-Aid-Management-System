@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}متابعة حالة الطلب | جامعة طنطا{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto py-16 px-4 font-cairo" dir="rtl">
+    
+    <div class="text-center mb-10">
+        <div class="w-20 h-20 bg-emerald-700 text-white rounded-2xl flex items-center justify-center text-4xl font-black mx-auto mb-6 shadow-lg rotate-3">
+            {{ application.student.user.first_name|slice:":1" }}
+        </div>
+        <h1 class="text-3xl font-black text-gray-900 font-tajawal">إخطار استلام طلب دعم</h1>
+        <p class="text-gray-500 mt-2">الرقم المرجعي: <span class="font-mono font-bold text-emerald-700">{{ application.serial_number }}</span></p>
+    </div>
+
+    <div class="mb-10 px-4">
+        <div class="flex justify-between mb-2">
+            <span class="text-xs font-bold text-emerald-700">تم التقديم</span>
+            <span class="text-xs font-bold text-gray-400">قيد الفحص</span>
+            <span class="text-xs font-bold text-gray-400">القرار النهائي</span>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-2.5">
+            <div class="bg-emerald-600 h-2.5 rounded-full shadow-sm shadow-emerald-200" style="width: 45%"></div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-3xl shadow-2xl shadow-gray-200/50 border border-gray-100 overflow-hidden">
+        
+        <div class="bg-emerald-600 px-8 py-8 flex items-center gap-6">
+            <div class="w-14 h-14 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center shrink-0 border border-white/30">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+            <div>
+                <h2 class="text-white font-black text-xl">وصلنا طلبك بنجاح!</h2>
+                <p class="text-emerald-100 text-sm">تاريخ التقديم: {{ application.submission_date|date:"d M Y | h:i A" }}</p>
+            </div>
+        </div>
+
+        <div class="p-8 md:p-12">
+            <p class="text-gray-700 leading-relaxed mb-8 text-lg font-tajawal">
+                عزيزي <span class="font-bold text-gray-900">{{ application.student.user.get_full_name }}</span>، نفيدكم علماً بأن طلبكم رقم 
+                <span class="font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded">{{ application.serial_number }}</span> 
+                قد دخل الآن مرحلة **الفحص الفني والتدقيق الاجتماعي**.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                    <span class="block text-xs text-gray-400 mb-1">دورة الدعم:</span>
+                    <span class="font-bold text-gray-700">{{ application.cycle.name }}</span>
+                </div>
+                <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                    <span class="block text-xs text-gray-400 mb-1">الحالة الحالية:</span>
+                    <span class="font-bold text-emerald-600">{{ application.get_status_display }}</span>
+                </div>
+            </div>
+
+            <div class="bg-amber-50 rounded-2xl p-6 border border-amber-100 mb-10 flex items-start gap-4">
+                <div class="bg-amber-100 p-2 rounded-lg">
+                    <svg class="w-5 h-5 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                    </svg>
+                </div>
+                <p class="text-amber-800 text-sm leading-6">
+                    <strong>تنبيه:</strong> يرجى متابعة حسابكم بشكل دوري، فقد يتم التواصل معكم في حال وجود نواقص في المستندات المرفقة.
+                </p>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-4">
+                <a href="{% url 'aid_management:student_application_list' %}" class="flex-1 bg-gray-900 hover:bg-black text-white text-center py-4 rounded-2xl font-black transition-all shadow-lg shadow-gray-200">
+                    متابعة حالة الطلب
+                </a>
+                <a href="{% url 'accounts:dashboard' %}" class="flex-1 bg-white border-2 border-gray-200 text-gray-600 text-center py-4 rounded-2xl font-bold hover:bg-gray-50 transition-all">
+                    الرئيسية
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
