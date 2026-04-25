@@ -13,7 +13,6 @@ class RoleRequiredMixin(AccessMixin):
             messages.error(request, "عذراً، ليس لديك الصلاحية للوصول إلى هذه الصفحة.")
             return redirect('accounts:dashboard_redirect')
         
-        
             
         return super().dispatch(request, *args, **kwargs)
 
