@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6">{% trans "Audit Dashboard" %}</h1>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="bg-white p-6 rounded-lg shadow border-l-4 border-blue-500">
+            <p class="text-gray-500 text-sm">{% trans "Total Logs" %}</p>
+            <p class="text-2xl font-bold">{{ stats.total_logs }}</p>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow border-l-4 border-red-500">
+            <p class="text-gray-500 text-sm">{% trans "Security Alerts" %}</p>
+            <p class="text-2xl font-bold text-red-600">{{ stats.security_alerts }}</p>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow border-l-4 border-yellow-500">
+            <p class="text-gray-500 text-sm">{% trans "System Overrides" %}</p>
+            <p class="text-2xl font-bold text-yellow-600">{{ stats.overrides_count }}</p>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow border-l-4 border-purple-500">
+            <p class="text-gray-500 text-sm">{% trans "Financial Imbalances" %}</p>
+            <p class="text-2xl font-bold text-purple-600">{{ stats.unbalanced_cycles }}</p>
+        </div>
+    </div>
+
+    {% if integrity_check %}
+    <div class="bg-white p-6 rounded-lg shadow mb-8">
+        <h2 class="text-xl font-semibold mb-4">{% trans "Latest Financial Integrity Check" %}</h2>
+        <div class="flex justify-between items-center">
+            <div>
+                <p><strong>{% trans "Cycle:" %}</strong> {{ integrity_check.cycle }}</p>
+                <p><strong>{% trans "Timestamp:" %}</strong> {{ integrity_check.timestamp }}</p>
+            </div>
+            <div class="{% if integrity_check.is_balanced %}text-green-600{% else %}text-red-600{% endif %} font-bold">
+                {% if integrity_check.is_balanced %}{% trans "BALANCED" %}{% else %}{% trans "UNBALANCED" %}{% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="bg-white p-6 rounded-lg shadow">
+        <h2 class="text-xl font-semibold mb-4">{% trans "Actions Summary" %}</h2>
+        <table class="min-w-full">
+            <thead>
+                <tr>
+                    <th class="text-right py-2 border-b">{% trans "Action" %}</th>
+                    <th class="text-right py-2 border-b">{% trans "Total Count" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in actions_summary %}
+                <tr>
+                    <td class="py-2 border-b">{{ item.action }}</td>
+                    <td class="py-2 border-b">{{ item.total }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

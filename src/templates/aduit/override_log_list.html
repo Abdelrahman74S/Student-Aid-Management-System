@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-6">{% trans "System Override Logs" %}</h1>
+
+    <div class="overflow-x-auto bg-white rounded-lg shadow">
+        <table class="min-w-full">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-right">{% trans "Admin" %}</th>
+                    <th class="px-6 py-3 text-right">{% trans "Application" %}</th>
+                    <th class="px-6 py-3 text-right">{% trans "Reason" %}</th>
+                    <th class="px-6 py-3 text-right">{% trans "Time" %}</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+                {% for override in overrides %}
+                <tr>
+                    <td class="px-6 py-4">{{ override.admin_user.username }}</td>
+                    <td class="px-6 py-4">{{ override.application.serial_number }}</td>
+                    <td class="px-6 py-4">{{ override.reason }}</td>
+                    <td class="px-6 py-4">{{ override.timestamp }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

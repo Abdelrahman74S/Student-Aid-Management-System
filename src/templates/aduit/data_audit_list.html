@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">{% trans "Data Audit Logs" %}</h1>
+    </div>
+
+    <div class="bg-gray-100 p-4 rounded-lg mb-6">
+        <form method="get" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {{ filter.form.as_p }}
+            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">{% trans "Filter" %}</button>
+        </form>
+    </div>
+
+    <div class="overflow-x-auto bg-white rounded-lg shadow">
+        <table class="min-w-full">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">{% trans "Timestamp" %}</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">{% trans "User" %}</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">{% trans "Action" %}</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">{% trans "Table" %}</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+                {% for log in data_logs %}
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap">{{ log.timestamp }}</td>
+                    <td class="px-6 py-4">{{ log.user.get_full_name|default:log.user.username }}</td>
+                    <td class="px-6 py-4">{{ log.get_action_display|default:log.action }}</td>
+                    <td class="px-6 py-4">{{ log.table_name }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" class="px-6 py-4 text-center">{% trans "No logs found." %}</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if is_paginated %}
+    <div class="mt-4">
+        {% include 'partials/pagination.html' %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

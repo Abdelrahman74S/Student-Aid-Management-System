@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-6">{% trans "Access and Security Logs" %}</h1>
+
+    <div class="bg-gray-100 p-4 rounded-lg mb-6">
+        <form method="get" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {{ filter.form.as_p }}
+            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">{% trans "Filter" %}</button>
+        </form>
+    </div>
+
+    <div class="overflow-x-auto bg-white rounded-lg shadow">
+        <table class="min-w-full">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">{% trans "Timestamp" %}</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">{% trans "User" %}</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">{% trans "Event" %}</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">{% trans "IP Address" %}</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+                {% for log in access_logs %}
+                <tr class="{% if log.event_type == 'FAILED' %}bg-red-50{% endif %}">
+                    <td class="px-6 py-4 whitespace-nowrap">{{ log.timestamp }}</td>
+                    <td class="px-6 py-4">{{ log.user.username|default:"---" }}</td>
+                    <td class="px-6 py-4">{{ log.event_type }}</td>
+                    <td class="px-6 py-4">{{ log.ip_address }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

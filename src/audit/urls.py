@@ -3,6 +3,7 @@ from . import views
 
 app_name = 'audit'
 
+
 urlpatterns = [
     # لوحة التحكم الرئيسية للمراقب
     path('dashboard/', views.AuditDashboardView.as_view(), name='dashboard'),
