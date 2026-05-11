@@ -1,119 +1,67 @@
-# documents/forms.py
-import os
-from datetime import date
 from django import forms
-from .models import (
-    ApplicationDocument,
-    SocialResearchForm as SocialResearchModel,
-    CommitteeMeetingMinute,
-    DisbursementVoucher,
-)
+from .models import ApplicationDocument, SocialResearchForm, CommitteeMeetingMinute, DisbursementVoucher
+from django.utils.translation import gettext_lazy as _
 
+class TailwindFormMixin:
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            existing_classes = field.widget.attrs.get('class', '')
+            field.widget.attrs['class'] = f"{existing_classes} w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block p-3 transition-all"
 
-class ApplicationDocumentForm(forms.ModelForm):
+class ApplicationDocumentForm(TailwindFormMixin, forms.ModelForm):
     class Meta:
         model = ApplicationDocument
         fields = ['document_type', 'file']
-        widgets = {
-            'document_type': forms.Select(attrs={'class': 'form-select'}),
-            'file': forms.ClearableFileInput(attrs={
-                'class': 'form-control',
-                'accept': '.pdf,.jpg,.jpeg,.png',
-            }),
-        }
         labels = {
-            'document_type': 'نوع المستند',
-            'file':          'الملف المرفق',
+            'document_type': _('نوع المستند المرفق'),
+            'file': _('اختر الملف (PDF أو صورة)'),
+        }
+        help_texts = {
+            'file': _('يرجى التأكد من وضوح المستند قبل الرفع.'),
         }
 
-    def clean_file(self):
-        file = self.cleaned_data.get('file')
-        if file:
-            if file.size > 5 * 1024 * 1024:
-                raise forms.ValidationError('حجم الملف يتجاوز 5MB')
-            ext = os.path.splitext(file.name)[1].lower()
-            if ext not in ['.pdf', '.jpg', '.jpeg', '.png']:
-                raise forms.ValidationError('نوع الملف غير مسموح')
-        return file
-
-
-ApplicationDocumentFormSet = forms.modelformset_factory(
-    ApplicationDocument,
-    form=ApplicationDocumentForm,
-    extra=3,
-    can_delete=True,
-)
-
-
-class SocialResearchDataForm(forms.ModelForm):
-
+class DigitalSocialResearchForm(TailwindFormMixin, forms.ModelForm):
     class Meta:
-        model = SocialResearchModel
-        fields = ['housing_type','monthly_rent','researcher_opinion','researcher_name']
+        model = SocialResearchForm
+        fields = ['housing_type', 'monthly_rent', 'researcher_name', 'researcher_opinion']
+        labels = {
+            'housing_type': _('نوع السكن الحالي'),
+            'monthly_rent': _('قيمة الإيجار الشهري (إن وجد)'),
+            'researcher_name': _('اسم الباحث الاجتماعي القائم بالبحث'),
+            'researcher_opinion': _('التوصية الفنية والبحثية'),
+        }
         widgets = {
-            'housing_type':       forms.RadioSelect(),
-            'monthly_rent':       forms.NumberInput(attrs={'class':'form-control','min':0}),
-            'researcher_opinion': forms.Textarea(attrs={'class':'form-control','rows':4}),
-            'researcher_name':    forms.TextInput(attrs={'class':'form-control'}),
+            'researcher_opinion': forms.Textarea(attrs={'rows': 4, 'placeholder': 'اكتب تفاصيل الحالة ورأيك الفني هنا...'}),
         }
 
-
-    def save(self, commit=True):
-        instance = super().save(commit=False)
-        instance.has_appliances = {
-            'ثلاجة':    self.cleaned_data.get('has_fridge', False),
-            'تكييف':    self.cleaned_data.get('has_ac', False),
-            'غسالة':    self.cleaned_data.get('has_washer', False),
-            'تليفزيون': self.cleaned_data.get('has_tv', False),
-            'سيارة':    self.cleaned_data.get('has_car', False),
-        }
-        if commit:
-            instance.save()
-        return instance
-
-
-class CommitteeMeetingMinuteForm(forms.ModelForm):
+class CommitteeMeetingForm(TailwindFormMixin, forms.ModelForm):
     class Meta:
         model = CommitteeMeetingMinute
-        fields = ['meeting_date','meeting_number','head_of_committee',
-            'attendees','approved_applications','official_document']
+        fields = ['meeting_date', 'meeting_number', 'head_of_committee', 'attendees', 'approved_applications']
+        labels = {
+            'meeting_date': _('تاريخ انعقاد الاجتماع'),
+            'meeting_number': _('رقم محضر الاجتماع'),
+            'head_of_committee': _('رئيس اللجنة'),
+            'attendees': _('الأعضاء الحاضرون'),
+            'approved_applications': _('الطلاب الذين تمت الموافقة عليهم'),
+        }
         widgets = {
-            'meeting_date':          forms.DateInput(attrs={'class':'form-control','type':'date'}),
-            'meeting_number':        forms.NumberInput(attrs={'class':'form-control','min':1}),
-            'head_of_committee':     forms.Select(attrs={'class':'form-select'}),
-            'attendees':             forms.CheckboxSelectMultiple(),
-            'approved_applications': forms.CheckboxSelectMultiple(),
-            'official_document':     forms.ClearableFileInput(attrs={'class':'form-control','accept':'.pdf'}),
+            'meeting_date': forms.DateInput(attrs={'type': 'date'}),
+            # استخدام CheckboxSelectMultiple لجعل اختيار الطلاب أسهل في الميكنة
+            'approved_applications': forms.CheckboxSelectMultiple(attrs={'class': 'grid grid-cols-1 md:grid-cols-2 gap-2'}),
+            'attendees': forms.CheckboxSelectMultiple(),
         }
 
-    def clean(self):
-        cleaned   = super().clean()
-        head      = cleaned.get('head_of_committee')
-        attendees = cleaned.get('attendees')
-        if head and attendees and head not in attendees:
-            self.add_error('attendees','رئيس اللجنة يجب أن يكون ضمن الحاضرين')
-        return cleaned
-
-
-class DisbursementVoucherForm(forms.ModelForm):
+class DisbursementVoucherForm(TailwindFormMixin, forms.ModelForm):
     class Meta:
         model = DisbursementVoucher
-        fields = ['voucher_number','amount','expiry_date','status']
-        widgets = {
-            'voucher_number': forms.TextInput(attrs={'class':'form-control'}),
-            'amount':         forms.NumberInput(attrs={'class':'form-control','min':0,'step':'0.01'}),
-            'expiry_date':    forms.DateInput(attrs={'class':'form-control','type':'date'}),
-            'status':         forms.Select(attrs={'class':'form-select'}),
+        fields = ['status', 'voucher_number', 'expiry_date']
+        labels = {
+            'status': _('حالة القسيمة'),
+            'voucher_number': _('رقم القسيمة الدفتري'),
+            'expiry_date': _('تاريخ انتهاء صلاحية الصرف'),
         }
-
-    def clean_expiry_date(self):
-        expiry = self.cleaned_data.get('expiry_date')
-        if expiry and expiry < date.today():
-            raise forms.ValidationError('التاريخ لا يمكن أن يكون في الماضي')
-        return expiry
-
-    def clean_amount(self):
-        amount = self.cleaned_data.get('amount')
-        if amount is not None and amount <= 0:
-            raise forms.ValidationError('المبلغ يجب أن يكون أكبر من صفر')
-        return amount
+        widgets = {
+            'expiry_date': forms.DateInput(attrs={'type': 'date'}),
+        }
