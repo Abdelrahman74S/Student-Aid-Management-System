@@ -18,6 +18,9 @@
         </a>
     </div>
 
+    <!-- Filter Section -->
+    {% include "includes/filter_form.html" %}
+
     <div class="grid gap-8">
         {% for app in applications %}
         <div class="group bg-white rounded-4xl p-1 shadow-xl hover:shadow-2xl transition-all border border-gray-100 overflow-hidden">
@@ -90,5 +93,8 @@
         </div>
         {% endfor %}
     </div>
+
+    <!-- Pagination Section -->
+    {% include "includes/pagination.html" %}
 </div>
 {% endblock %}

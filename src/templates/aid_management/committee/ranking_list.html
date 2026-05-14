@@ -20,10 +20,13 @@
             </div>
             <div class="text-center px-4">
                 <p class="text-[10px] font-black text-emerald-600 uppercase mb-1">إجمالي المتقدمين</p>
-                <p class="text-xl font-black text-emerald-900">{{ applications|length }}</p>
+                <p class="text-xl font-black text-emerald-900">{{ ranked_applications.paginator.count }}</p>
             </div>
         </div>
     </div>
+
+    <!-- Filter & Search Section -->
+    {% include "includes/filter_form.html" %}
 
     <div class="bg-white rounded-[2.5rem] shadow-2xl border border-gray-100 overflow-hidden">
         <table class="w-full text-right">
@@ -38,7 +41,7 @@
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-50">
-                {% for app in applications %}
+                {% for app in ranked_applications %}
                 <tr class="hover:bg-primary-50/30 transition-all group">
                     <td class="p-6">
                         <div class="w-10 h-10 rounded-xl flex items-center justify-center font-black 
@@ -100,6 +103,9 @@
             </tbody>
         </table>
     </div>
+
+    <!-- Pagination -->
+    {% include "includes/pagination.html" %}
 
     <div class="mt-8 bg-gray-900 p-6 rounded-3xl text-white flex justify-between items-center shadow-2xl">
         <div class="flex items-center gap-4">

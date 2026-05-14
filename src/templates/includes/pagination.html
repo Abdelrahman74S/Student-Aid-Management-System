@@ -1,0 +1,30 @@
+{% load i18n %}
+
+{% if is_paginated %}
+<div class="flex justify-center items-center gap-2 mt-10 font-cairo" dir="rtl">
+    {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}{% if query_params %}&{{ query_params }}{% endif %}" 
+           class="w-10 h-10 flex items-center justify-center bg-white border border-gray-100 rounded-xl text-gray-600 hover:bg-primary-50 hover:text-primary-600 transition-all">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+        </a>
+    {% endif %}
+
+    <div class="flex gap-1">
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+                <span class="w-10 h-10 flex items-center justify-center bg-primary-600 text-white rounded-xl font-bold shadow-lg shadow-primary-200">{{ num }}</span>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <a href="?page={{ num }}{% if query_params %}&{{ query_params }}{% endif %}" 
+                   class="w-10 h-10 flex items-center justify-center bg-white border border-gray-100 rounded-xl text-gray-600 hover:bg-gray-50 transition-all font-bold">{{ num }}</a>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if query_params %}&{{ query_params }}{% endif %}" 
+           class="w-10 h-10 flex items-center justify-center bg-white border border-gray-100 rounded-xl text-gray-600 hover:bg-primary-50 hover:text-primary-600 transition-all">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+        </a>
+    {% endif %}
+</div>
+{% endif %}

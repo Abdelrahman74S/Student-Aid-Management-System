@@ -48,6 +48,8 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div class="lg:col-span-1 space-y-6">
+            {% load cache %}
+            {% cache 1800 budget_analysis active_cycle.id %}
             <div class="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-2xl">
                 <h3 class="font-black text-gray-900 mb-6 flex items-center gap-2 text-lg">
                     <span class="w-1.5 h-6 bg-emerald-500 rounded-full"></span>
@@ -76,6 +78,7 @@
                     </div>
                 </div>
             </div>
+            {% endcache %}
 
             <div class="bg-primary-900 p-8 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden">
                 <div class="relative z-10">

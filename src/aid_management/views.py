@@ -1,5 +1,10 @@
+from django.core.cache import cache
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from django.http import JsonResponse, HttpResponseForbidden
 from django.shortcuts import render, redirect, get_object_or_404
+from core.mixins import EnhancedListMixin
+from .filters import AidApplicationFilter
 from django.urls import reverse_lazy, reverse
 from django.views import View
 from django.views.generic import (
@@ -28,16 +33,21 @@ from accounts.mixins import (
 # 1. Student Portal – محمود
 # =================================================================
 
-class StudentApplicationListView(LoginRequiredMixin, StudentRequiredMixin, ListView):
+class StudentApplicationListView(LoginRequiredMixin, StudentRequiredMixin, EnhancedListMixin, ListView):
     model = AidApplication
     template_name = "aid_management/student/application_list.html"
     context_object_name = "applications"
+    filterset_class = AidApplicationFilter
+    search_fields = ['serial_number', 'cycle__name']
+    ordering_fields = ['created_at', 'status']
+    default_ordering = '-created_at'
 
     def get_queryset(self):
-        return AidApplication.objects.filter(
+        queryset = super().get_queryset().filter(
             student=self.request.user.student_profile,
             deleted_at__isnull=True
         ).select_related('cycle')
+        return queryset
 
 
 class StudentApplicationCreateView(LoginRequiredMixin, StudentRequiredMixin, CreateView):
@@ -271,27 +281,60 @@ class CommitteeHeadDashboardView(LoginRequiredMixin, CommitteeHeadRequiredMixin,
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        user_id = self.request.user.id
+        cache_key = f"committee_head_dashboard_{user_id}"
+        
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            context.update(cached_data)
+            return context
+
         cycle = SupportCycle.objects.filter(status__in=['OPEN', 'UNDER_REVIEW']).first()
 
         if cycle:
-            context['cycle'] = cycle
-            context['total_apps'] = cycle.applications.count()
-            context['submitted_reviews'] = CommitteeReview.objects.filter(
+            # Expensive aggregations
+            total_apps = cycle.applications.count()
+            reviews_submitted = CommitteeReview.objects.filter(
                 application__cycle=cycle, is_submitted=True
             ).count()
-            context['budget_usage'] = (cycle.reserved_budget / cycle.total_budget * 100 
-                                      if cycle.total_budget else 0)
+            
+            # Need to know total reviews required (e.g. 2 per app)
+            total_needed = total_apps * 2 
+            
+            top_apps = cycle.applications.filter(status='SCORED').annotate(
+                avg_score=Avg('reviews__total_score')
+            ).order_by('-avg_score')[:5]
+
+            dashboard_data = {
+                'active_cycle': cycle,
+                'total_apps_count': total_apps,
+                'reviews_completed': reviews_submitted,
+                'total_reviews_needed': total_needed,
+                'budget_reserved_percent': (cycle.reserved_budget / cycle.total_budget * 100 
+                                            if cycle.total_budget else 0),
+                'budget_disbursed_percent': (cycle.disbursed_budget / cycle.total_budget * 100 
+                                            if cycle.total_budget else 0),
+                'top_applications': list(top_apps), # Convert to list to make it serializable for cache
+            }
+            cache.set(cache_key, dashboard_data, timeout=settings.CACHE_TTL)
+            context.update(dashboard_data)
+            
         return context
 
 
-class ApplicationRankListView(LoginRequiredMixin, CommitteeHeadRequiredMixin, ListView):
+@method_decorator(cache_page(60 * 15, key_prefix='application_ranking_list'), name='dispatch')
+class ApplicationRankListView(LoginRequiredMixin, CommitteeHeadRequiredMixin, EnhancedListMixin, ListView):
     template_name = "aid_management/committee/ranking_list.html"
     context_object_name = "ranked_applications"
+    filterset_class = AidApplicationFilter
+    search_fields = ['serial_number', 'student__user__first_name', 'student__user__last_name']
+    ordering_fields = ['avg_score', 'created_at']
+    default_ordering = '-avg_score'
 
     def get_queryset(self):
         cycle_id = self.request.GET.get('cycle')
         managed_programs = self.request.user.committee_head_profile.managed_programs.all()
-        qs = AidApplication.objects.filter(status='SCORED', student__program__in=managed_programs)
+        qs = super().get_queryset().filter(status='SCORED', student__program__in=managed_programs)
         if cycle_id:
             qs = qs.filter(cycle_id=cycle_id)
         return qs.annotate(avg_score=Avg('reviews__total_score')).order_by('-avg_score')

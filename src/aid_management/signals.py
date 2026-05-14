@@ -6,6 +6,18 @@ from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.conf import settings
+from django.core.cache import cache
+
+@receiver([post_save, post_delete], sender=AidApplication)
+def clear_aid_management_cache(sender, instance, **kwargs):
+    """Invalidate cache on aid application changes."""
+    cache.delete_pattern("committee_head_dashboard_*")
+    cache.delete_pattern("application_ranking_list_*")
+
+@receiver([post_save, post_delete], sender=CommitteeReview)
+def clear_dashboard_reviews_cache(sender, instance, **kwargs):
+    """Invalidate dashboard when reviews change."""
+    cache.delete_pattern("committee_head_dashboard_*")
 
 @receiver(post_save, sender=CommitteeReview)
 def check_all_reviews_submitted(sender, instance, **kwargs):
