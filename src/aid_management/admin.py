@@ -100,10 +100,10 @@ class ScoringRuleAdmin(admin.ModelAdmin):
 
 @admin.register(AidApplication)
 class AidApplicationAdmin(admin.ModelAdmin):
-    list_display = ('serial_number', 'student_name', 'program_name', 'cycle', 'get_total_score', 'colored_status', 'is_locked')
+    list_display = ('serial_number', 'student_name', 'program_name', 'cycle', 'auto_score', 'get_total_score', 'colored_status', 'is_locked')
     list_filter = ('status', 'cycle', 'student__program', 'is_locked', 'submission_date')
     search_fields = ('serial_number', 'student__user__full_name', 'student__student_id', 'student__user__national_id')
-    readonly_fields = ('serial_number', 'submission_date', 'decision_date', 'ip_address', 'user_agent', 'get_total_score')
+    readonly_fields = ('serial_number', 'submission_date', 'decision_date', 'ip_address', 'user_agent', 'get_total_score', 'auto_score')
     inlines = [ApplicationDocumentInline, CommitteeReviewInline, BudgetAllocationInline]
     actions = ['lock_applications', 'unlock_applications']
 
@@ -112,7 +112,7 @@ class AidApplicationAdmin(admin.ModelAdmin):
             'fields': (('student', 'cycle'), ('serial_number', 'submission_date'))
         }),
         (_('القرار المالي'), {
-            'fields': (('status', 'is_locked'), ('get_total_score', 'decision_date'), 'decision_notes')
+            'fields': (('status', 'is_locked'), ('auto_score', 'get_total_score', 'decision_date'), 'committee_decision')
         }),
         (_('بيانات تقنية'), {
             'fields': (('ip_address', 'user_agent'),),

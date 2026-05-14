@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{% trans "مراجعة تظلم" %} | جامعة طنطا{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto py-10 px-4" dir="rtl">
+    <h1 class="text-3xl font-black text-gray-900 mb-8">{% trans "مراجعة التظلم" %}</h1>
+
+    <!-- بيانات التظلم -->
+    <div class="bg-gray-50 rounded-2xl p-6 border border-gray-200 mb-8 space-y-4">
+        <div class="flex justify-between">
+            <span class="text-gray-500 text-sm">{% trans "الطالب:" %}</span>
+            <span class="font-bold text-gray-800">{{ object.student.full_name }}</span>
+        </div>
+        <div class="flex justify-between">
+            <span class="text-gray-500 text-sm">{% trans "رقم الطلب:" %}</span>
+            <span class="font-mono font-bold text-primary-600">{{ object.application.serial_number }}</span>
+        </div>
+        <div class="flex justify-between">
+            <span class="text-gray-500 text-sm">{% trans "تاريخ التقديم:" %}</span>
+            <span class="text-sm text-gray-600" dir="ltr">{{ object.created_at|date:"Y/m/d H:i" }}</span>
+        </div>
+        <hr class="border-gray-200">
+        <div>
+            <p class="text-xs text-gray-500 mb-2">{% trans "سبب التظلم:" %}</p>
+            <p class="text-sm text-gray-800 bg-white p-4 rounded-xl leading-relaxed">{{ object.reason }}</p>
+        </div>
+        {% if object.supporting_documents %}
+        <a href="{{ object.supporting_documents.url }}" target="_blank"
+           class="inline-flex items-center gap-2 text-xs bg-primary-50 text-primary-700 px-3 py-2 rounded-lg font-bold">
+            📎 {% trans "عرض المستندات الداعمة" %}
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- نموذج الرد -->
+    <div class="bg-white p-8 rounded-3xl shadow-2xl border border-gray-100">
+        <h2 class="font-black text-gray-800 mb-6">{% trans "قرار اللجنة" %}</h2>
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+
+            <div>
+                <label for="id_status" class="block font-bold text-gray-700 mb-2">{% trans "القرار" %}</label>
+                <select name="status" id="id_status" required
+                    class="w-full border border-gray-200 rounded-2xl p-3 text-sm focus:ring-2 focus:ring-primary-300">
+                    <option value="UNDER_REVIEW" {% if object.status == 'UNDER_REVIEW' %}selected{% endif %}>{% trans "تحت المراجعة" %}</option>
+                    <option value="ACCEPTED" {% if object.status == 'ACCEPTED' %}selected{% endif %}>{% trans "قبول التظلم" %}</option>
+                    <option value="REJECTED" {% if object.status == 'REJECTED' %}selected{% endif %}>{% trans "رفض التظلم" %}</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="id_admin_response" class="block font-bold text-gray-700 mb-2">{% trans "رد اللجنة" %}</label>
+                <textarea name="admin_response" id="id_admin_response" rows="4"
+                    class="w-full border border-gray-200 rounded-2xl p-4 text-sm focus:ring-2 focus:ring-primary-300"
+                    placeholder="{% trans 'اكتب رد اللجنة على التظلم...' %}">{{ object.admin_response }}</textarea>
+            </div>
+
+            <button type="submit" class="w-full bg-primary-600 text-white py-4 rounded-2xl font-black text-lg hover:bg-primary-700 transition-all shadow-xl shadow-primary-100">
+                {% trans "حفظ القرار" %}
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

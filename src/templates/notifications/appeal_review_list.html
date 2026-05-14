@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{% trans "مراجعة التظلمات" %} | جامعة طنطا{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto py-10 px-4" dir="rtl">
+    <h1 class="text-3xl font-black text-gray-900 mb-8">{% trans "التظلمات المعلقة" %}</h1>
+
+    <div class="bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
+        <table class="w-full text-right">
+            <thead class="bg-gray-50 text-gray-400 text-[10px] uppercase font-black">
+                <tr>
+                    <th class="p-5">{% trans "الطالب" %}</th>
+                    <th class="p-5">{% trans "الطلب" %}</th>
+                    <th class="p-5">{% trans "الدورة" %}</th>
+                    <th class="p-5">{% trans "تاريخ التظلم" %}</th>
+                    <th class="p-5">{% trans "الحالة" %}</th>
+                    <th class="p-5">{% trans "الإجراء" %}</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">
+                {% for appeal in appeals %}
+                <tr class="hover:bg-gray-50/50 transition-all">
+                    <td class="p-5">
+                        <p class="font-bold text-gray-800 text-sm">{{ appeal.student.full_name }}</p>
+                    </td>
+                    <td class="p-5">
+                        <span class="font-mono text-xs text-gray-600">{{ appeal.application.serial_number }}</span>
+                    </td>
+                    <td class="p-5">
+                        <span class="text-xs text-gray-500">{{ appeal.application.cycle.name }}</span>
+                    </td>
+                    <td class="p-5 text-xs text-gray-500" dir="ltr">{{ appeal.created_at|date:"Y/m/d" }}</td>
+                    <td class="p-5">
+                        <span class="px-3 py-1 rounded-full text-[10px] font-black
+                            {% if appeal.status == 'PENDING' %}bg-amber-100 text-amber-700
+                            {% else %}bg-blue-100 text-blue-700{% endif %}">
+                            {{ appeal.get_status_display }}
+                        </span>
+                    </td>
+                    <td class="p-5">
+                        <a href="{% url 'notifications:appeal_review' appeal.pk %}" 
+                           class="text-xs font-bold text-primary-600 hover:text-primary-800 underline">
+                            {% trans "مراجعة" %}
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if not appeals %}
+        <div class="p-20 text-center text-gray-400 font-bold">{% trans "لا توجد تظلمات معلقة" %}</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{% trans "الإشعارات" %} | جامعة طنطا{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-10 px-4" dir="rtl">
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-black text-gray-900">{% trans "الإشعارات" %}</h1>
+            <p class="text-gray-400 text-sm mt-1">
+                {% if unread_count > 0 %}
+                    <span class="bg-red-500 text-white px-2 py-0.5 rounded-full text-xs font-black">{{ unread_count }}</span>
+                    {% trans "إشعار غير مقروء" %}
+                {% else %}
+                    {% trans "لا توجد إشعارات جديدة" %}
+                {% endif %}
+            </p>
+        </div>
+        {% if unread_count > 0 %}
+        <form method="post" action="{% url 'notifications:mark_all_read' %}">
+            {% csrf_token %}
+            <button type="submit" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-xl text-sm font-bold transition-all">
+                {% trans "تعليم الكل كمقروء" %}
+            </button>
+        </form>
+        {% endif %}
+    </div>
+
+    <div class="space-y-4">
+        {% for notification in notifications %}
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-start gap-4 
+                    {% if not notification.is_read %}border-r-4 
+                        {% if notification.notification_type == 'SUCCESS' %}border-r-emerald-500 bg-emerald-50/30
+                        {% elif notification.notification_type == 'WARNING' %}border-r-amber-500 bg-amber-50/30
+                        {% elif notification.notification_type == 'ALERT' %}border-r-red-500 bg-red-50/30
+                        {% else %}border-r-primary-500 bg-primary-50/30
+                        {% endif %}
+                    {% endif %}
+                    hover:shadow-md transition-all">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0
+                        {% if notification.notification_type == 'SUCCESS' %}bg-emerald-100 text-emerald-600
+                        {% elif notification.notification_type == 'WARNING' %}bg-amber-100 text-amber-600
+                        {% elif notification.notification_type == 'ALERT' %}bg-red-100 text-red-600
+                        {% else %}bg-primary-100 text-primary-600
+                        {% endif %}">
+                {% if notification.notification_type == 'SUCCESS' %}✅
+                {% elif notification.notification_type == 'WARNING' %}⚠️
+                {% elif notification.notification_type == 'ALERT' %}🚨
+                {% else %}ℹ️{% endif %}
+            </div>
+            <div class="flex-1 min-w-0">
+                <h3 class="font-bold text-gray-800 text-sm">{{ notification.title }}</h3>
+                <p class="text-xs text-gray-500 mt-1 leading-relaxed">{{ notification.message }}</p>
+                <p class="text-[10px] text-gray-400 mt-2" dir="ltr">{{ notification.created_at|date:"Y/m/d H:i" }}</p>
+            </div>
+            {% if not notification.is_read %}
+            <form method="post" action="{% url 'notifications:mark_read' notification.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="text-[10px] bg-gray-100 hover:bg-gray-200 text-gray-500 px-3 py-1 rounded-lg font-bold transition-all flex-shrink-0">
+                    {% trans "قراءة" %}
+                </button>
+            </form>
+            {% endif %}
+        </div>
+        {% empty %}
+        <div class="text-center py-20 text-gray-400">
+            <p class="text-5xl mb-4">🔔</p>
+            <p class="font-bold">{% trans "لا توجد إشعارات حالياً" %}</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if is_paginated %}
+    <div class="flex justify-center gap-2 mt-10">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}" class="px-4 py-2 bg-white border rounded-xl text-sm font-bold hover:bg-gray-50">{% trans "السابق" %}</a>
+        {% endif %}
+        <span class="px-4 py-2 bg-primary-50 text-primary-700 border border-primary-200 rounded-xl text-sm font-bold">{{ page_obj.number }}/{{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}" class="px-4 py-2 bg-white border rounded-xl text-sm font-bold hover:bg-gray-50">{% trans "التالي" %}</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

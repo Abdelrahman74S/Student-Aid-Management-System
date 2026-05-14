@@ -272,6 +272,35 @@ class StudentProfile(RoleValidatedProfileMixin, models.Model):
     
     address = models.TextField(_("عنوان السكن بالتفصيل"), blank=True)
     
+    # Financial Disbursement Data
+    bank_name = models.CharField(
+        _("اسم البنك"), 
+        max_length=100, 
+        blank=True, 
+        null=True,
+        help_text=_("مثال: بنك مصر، البنك الأهلي المصري")
+    )
+    bank_account_number = models.CharField(
+        _("رقم الحساب البنكي (IBAN)"), 
+        max_length=50, 
+        blank=True, 
+        null=True
+    )
+    wallet_provider = models.CharField(
+        _("مزود المحفظة الإلكترونية"), 
+        max_length=50, 
+        blank=True, 
+        null=True,
+        help_text=_("مثال: فودافون كاش، اتصالات كاش، أمان")
+    )
+    wallet_number = models.CharField(
+        _("رقم المحفظة الإلكترونية"), 
+        max_length=11, 
+        blank=True, 
+        null=True,
+        validators=[egyptian_phone_validator]
+    )
+    
     disability_status = models.BooleanField(
         _("ذوي الاحتياجات الخاصة"), 
         default=False

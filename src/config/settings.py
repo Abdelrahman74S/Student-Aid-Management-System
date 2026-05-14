@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'accounts',
     'aid_management',
     'assets_reporting',
+    'notifications',
     
     'tailwind',
     'theme',

@@ -251,6 +251,23 @@ class AidApplication(models.Model):
 
     profile_snapshot = models.JSONField(default=dict, blank=True)
 
+    # ==============================
+    # التقييم التلقائي (Auto-Scoring)
+    # ==============================
+    auto_score = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        default=0,
+        verbose_name=_("الدرجة التلقائية"),
+        help_text=_("تُحسب تلقائياً بناءً على بيانات الطالب وقواعد التقييم."),
+    )
+    auto_score_breakdown = models.JSONField(
+        default=dict,
+        blank=True,
+        verbose_name=_("تفصيل الدرجة التلقائية"),
+        help_text=_("تفصيل النقاط لكل بُعد تقييمي."),
+    )
+
     def freeze_student_data(self):
         profile = self.student
 
@@ -265,6 +282,41 @@ class AidApplication(models.Model):
         }
 
         self.save(update_fields=["profile_snapshot"])
+
+    def calculate_auto_score(self):
+        """
+        حساب الدرجة التلقائية بناءً على محرك التقييم.
+        يُخزّن النتيجة في auto_score و auto_score_breakdown.
+        """
+        from .services import ScoringEngine
+
+        engine = ScoringEngine(self)
+        result = engine.evaluate()
+
+        self.auto_score = result.total_auto_score
+        self.auto_score_breakdown = {
+            'total_auto_score': result.total_auto_score,
+            'max_possible_score': result.max_possible_score,
+            'score_percentage': result.score_percentage,
+            'has_manual_dimensions': result.has_manual_dimensions,
+            'dimensions': [
+                {
+                    'criteria_type': d.criteria_type,
+                    'criteria_display': d.criteria_display,
+                    'raw_value': d.raw_value,
+                    'awarded_points': d.awarded_points,
+                    'max_points': d.max_points,
+                    'weight': d.weight,
+                    'weighted_score': d.weighted_score,
+                    'matched': d.matched,
+                    'reason': d.reason,
+                    'is_auto': d.is_auto,
+                }
+                for d in result.dimensions
+            ],
+        }
+
+        self.save(update_fields=['auto_score', 'auto_score_breakdown', 'updated_at'])
 
     @property
     def is_deleted(self):
@@ -352,6 +404,18 @@ class AidApplication(models.Model):
             raise ValidationError(
                 f"لا يمكن الانتقال من {self.get_status_display()} إلى {new_status}"
             )
+
+        # التحقق من وجود بحث اجتماعي قبل التقييم
+        if new_status == "SCORED":
+            has_social_rule = ScoringRule.objects.filter(
+                cycle=self.cycle,
+                criteria_type="SOCIAL_RESEARCH",
+                is_active=True,
+            ).exists()
+            if has_social_rule and not hasattr(self, 'social_research'):
+                raise ValidationError(
+                    _("يجب إكمال البحث الاجتماعي قبل الانتقال لمرحلة التقييم.")
+                )
 
         self.status = new_status
         if new_status == "SUBMITTED":

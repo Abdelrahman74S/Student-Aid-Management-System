@@ -1,7 +1,7 @@
 from django.core.cache import cache
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
-from django.http import JsonResponse, HttpResponseForbidden
+from django.http import JsonResponse, HttpResponseForbidden, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from core.mixins import EnhancedListMixin
 from .filters import AidApplicationFilter
@@ -17,6 +17,10 @@ from django.utils import timezone
 from django.db import transaction
 from django.db.models import Sum, Avg, Count, Q
 from django.core.exceptions import ValidationError
+import openpyxl
+from openpyxl.styles import Font, Alignment, PatternFill
+from io import BytesIO
+from django.conf import settings
 
 from .models import (
     SupportCycle, AidApplication, ScoringRule, 
@@ -245,6 +249,31 @@ class ApplicationScoringView(LoginRequiredMixin, ReviewerRequiredMixin, UpdateVi
         kwargs['application'] = self.get_object().application
         return kwargs
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        application = self.get_object().application
+
+        # بيانات التقييم التلقائي
+        context['auto_breakdown'] = application.auto_score_breakdown
+        context['auto_score'] = application.auto_score
+
+        # حساب الاقتراحات الحية (في حال عدم وجود breakdown مخزّن)
+        if not application.auto_score_breakdown:
+            from .services import get_application_scoring_details
+            details = get_application_scoring_details(application)
+            context['auto_breakdown'] = details
+            context['auto_score'] = details['total_auto_score']
+
+        context['application'] = application
+
+        # بيانات البحث الاجتماعي إن وُجدت
+        try:
+            context['social_research'] = application.social_research
+        except Exception:
+            context['social_research'] = None
+
+        return context
+
     def form_valid(self, form):
         review = form.save(commit=False)
 
@@ -294,6 +323,7 @@ class CommitteeHeadDashboardView(LoginRequiredMixin, CommitteeHeadRequiredMixin,
         if cycle:
             # Expensive aggregations
             total_apps = cycle.applications.count()
+            submitted_apps = cycle.applications.exclude(status='DRAFT').count()
             reviews_submitted = CommitteeReview.objects.filter(
                 application__cycle=cycle, is_submitted=True
             ).count()
@@ -301,20 +331,31 @@ class CommitteeHeadDashboardView(LoginRequiredMixin, CommitteeHeadRequiredMixin,
             # Need to know total reviews required (e.g. 2 per app)
             total_needed = total_apps * 2 
             
+            # أعلى الطلبات من حيث التقييم اليدوي (SCORED)
             top_apps = cycle.applications.filter(status='SCORED').annotate(
                 avg_score=Avg('reviews__total_score')
             ).order_by('-avg_score')[:5]
 
+            # الترتيب الأولي التلقائي — للطلبات المقدمة قبل المراجعة اليدوية
+            priority_ranking = cycle.applications.filter(
+                status__in=['SUBMITTED', 'UNDER_REVIEW'],
+                auto_score__gt=0
+            ).select_related(
+                'student__user', 'student__program'
+            ).order_by('-auto_score')[:10]
+
             dashboard_data = {
                 'active_cycle': cycle,
                 'total_apps_count': total_apps,
+                'submitted_apps_count': submitted_apps,
                 'reviews_completed': reviews_submitted,
                 'total_reviews_needed': total_needed,
                 'budget_reserved_percent': (cycle.reserved_budget / cycle.total_budget * 100 
                                             if cycle.total_budget else 0),
                 'budget_disbursed_percent': (cycle.disbursed_budget / cycle.total_budget * 100 
                                             if cycle.total_budget else 0),
-                'top_applications': list(top_apps), # Convert to list to make it serializable for cache
+                'top_applications': list(top_apps),
+                'priority_ranking': list(priority_ranking),
             }
             cache.set(cache_key, dashboard_data, timeout=settings.CACHE_TTL)
             context.update(dashboard_data)
@@ -334,10 +375,19 @@ class ApplicationRankListView(LoginRequiredMixin, CommitteeHeadRequiredMixin, En
     def get_queryset(self):
         cycle_id = self.request.GET.get('cycle')
         managed_programs = self.request.user.committee_head_profile.managed_programs.all()
-        qs = super().get_queryset().filter(status='SCORED', student__program__in=managed_programs)
+        qs = super().get_queryset().filter(status__in=['SCORED', 'APPROVED', 'DISBURSED'], student__program__in=managed_programs)
         if cycle_id:
             qs = qs.filter(cycle_id=cycle_id)
         return qs.annotate(avg_score=Avg('reviews__total_score')).order_by('-avg_score')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        cycle_id = self.request.GET.get('cycle')
+        if cycle_id:
+            context['active_cycle'] = get_object_or_404(SupportCycle, id=cycle_id)
+        else:
+            context['active_cycle'] = SupportCycle.objects.filter(status__in=['OPEN', 'UNDER_REVIEW']).first()
+        return context
 
 
 class FinalDecisionUpdateView(LoginRequiredMixin, CommitteeHeadRequiredMixin, View):
@@ -424,3 +474,80 @@ class CycleStatusTransitionView(LoginRequiredMixin, CommitteeHeadRequiredMixin, 
         except Exception as e:
             messages.error(request, str(e))
         return redirect('aid_management:committee_dashboard')
+
+
+class DisbursementExportView(LoginRequiredMixin, CommitteeHeadRequiredMixin, View):
+    def get(self, request, cycle_id):
+        cycle = get_object_or_404(SupportCycle, id=cycle_id)
+        export_type = request.GET.get('format', 'excel')
+        
+        # Get all approved or disbursed applications for this cycle
+        applications = AidApplication.objects.filter(
+            cycle=cycle, 
+            status__in=['APPROVED', 'DISBURSED']
+        ).select_related('student__user', 'budget_allocation')
+
+        if export_type == 'excel':
+            return self.export_excel(cycle, applications)
+        elif export_type == 'pdf':
+            return self.export_pdf(cycle, applications)
+        else:
+            return HttpResponse("Unsupported format", status=400)
+
+    def export_excel(self, cycle, applications):
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "كشف الصرف المالي"
+        ws.sheet_view.rightToLeft = True
+
+        # Headers
+        headers = [
+            'الرقم المتسلسل', 'اسم الطالب', 'الرقم القومي', 'الرقم الجامعي', 
+            'المبلغ المخصص', 'اسم البنك', 'رقم الحساب (IBAN)', 
+            'مزود المحفظة', 'رقم المحفظة'
+        ]
+        
+        # Style
+        header_font = Font(bold=True, color="FFFFFF")
+        header_fill = PatternFill(start_color="1E3A8A", end_color="1E3A8A", fill_type="solid")
+        
+        for col_num, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col_num, value=header)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = Alignment(horizontal="center")
+
+        # Data
+        for row_num, app in enumerate(applications, 2):
+            # Check for budget allocation
+            allocation = BudgetAllocation.objects.filter(application=app).first()
+            amount = allocation.amount_allocated if allocation else 0
+            
+            ws.cell(row=row_num, column=1, value=app.serial_number)
+            ws.cell(row=row_num, column=2, value=app.student.user.get_full_name())
+            ws.cell(row=row_num, column=3, value=app.student.user.national_id)
+            ws.cell(row=row_num, column=4, value=app.student.student_id)
+            ws.cell(row=row_num, column=5, value=amount)
+            ws.cell(row=row_num, column=6, value=app.student.bank_name or "N/A")
+            ws.cell(row=row_num, column=7, value=app.student.bank_account_number or "N/A")
+            ws.cell(row=row_num, column=8, value=app.student.wallet_provider or "N/A")
+            ws.cell(row=row_num, column=9, value=app.student.wallet_number or "N/A")
+
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = f'attachment; filename="disbursement_{cycle.serial_number}.xlsx"'
+        wb.save(response)
+        return response
+
+    def export_pdf(self, cycle, applications):
+        from assets_reporting.utils import render_to_pdf
+        context = {
+            'cycle': cycle,
+            'applications': applications,
+            'today': timezone.now(),
+        }
+        pdf = render_to_pdf('aid_management/exports/disbursement_list.html', context)
+        if pdf:
+            response = HttpResponse(pdf.read(), content_type='application/pdf')
+            response['Content-Disposition'] = f'attachment; filename="disbursement_{cycle.serial_number}.pdf"'
+            return response
+        return HttpResponse("Error generating PDF", status=500)

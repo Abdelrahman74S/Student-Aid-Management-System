@@ -7,6 +7,7 @@ Covers:
 """
 
 import json
+from decimal import Decimal
 from datetime import timedelta
 
 from django.core.exceptions import ValidationError
@@ -350,3 +351,204 @@ class AidManagementViewTests(TestCase):
         self.assertEqual(app.status, "SUBMITTED")
         self.assertIsNotNone(app.submission_date)
         self.assertTrue(app.serial_number.startswith("طلب-"))
+
+
+class ScoringEngineTests(TestCase):
+    """Tests for the Auto-Scoring Engine (services.py)."""
+
+    def setUp(self):
+        self.admin_user = User.objects.create_superuser(
+            email="admin_engine@science.tanta.edu.eg",
+            password="adminpassword",
+            full_name="Admin Engine",
+            national_id="00000000000099"
+        )
+        self.student_user = User.objects.create_user(
+            email="UG_9999999@science.tanta.edu.eg",
+            password="pwd123",
+            full_name="Student Engine",
+            national_id="99999999999999",
+        )
+        # تعديل بيانات الطالب
+        profile = self.student_user.student_profile
+        profile.gpa = 3.20
+        profile.disability_status = True
+        profile.save()
+
+        now = timezone.now()
+        self.cycle = SupportCycle.objects.create(
+            name="دورة محرك التقييم",
+            academic_year="2025-2026",
+            semester="FIRST",
+            total_budget=50_000,
+            application_start_date=now - timedelta(days=1),
+            application_end_date=now + timedelta(days=30),
+            status="OPEN",
+            created_by=self.admin_user,
+        )
+
+        # قواعد التقييم
+        ScoringRule.objects.create(
+            cycle=self.cycle,
+            criteria_type="INCOME_TIER",
+            condition={"min": 0, "max": 5000},
+            points=20,
+            weight=Decimal("1.50"),
+            is_active=True,
+        )
+        ScoringRule.objects.create(
+            cycle=self.cycle,
+            criteria_type="FAMILY_SIZE",
+            condition={"min": 1, "max": 10},
+            points=10,
+            weight=Decimal("1.00"),
+            is_active=True,
+        )
+        ScoringRule.objects.create(
+            cycle=self.cycle,
+            criteria_type="GPA",
+            condition={"min": 0, "max": 4},
+            points=15,
+            weight=Decimal("1.20"),
+            is_active=True,
+        )
+        ScoringRule.objects.create(
+            cycle=self.cycle,
+            criteria_type="SPECIAL_CASES",
+            condition={},
+            points=10,
+            weight=Decimal("1.00"),
+            is_active=True,
+        )
+        ScoringRule.objects.create(
+            cycle=self.cycle,
+            criteria_type="SOCIAL_RESEARCH",
+            condition={},
+            points=15,
+            weight=Decimal("1.00"),
+            is_active=True,
+        )
+
+        self.application = AidApplication.objects.create(
+            student=self.student_user.student_profile,
+            cycle=self.cycle,
+            financial_assessment={
+                "father_income": "1500",
+                "mother_income": "500",
+                "family_members": 7,
+                "housing_status": "RENT",
+            },
+        )
+
+    def test_scoring_engine_calculates_all_dimensions(self):
+        """Engine should evaluate all active rules."""
+        from .services import ScoringEngine
+
+        engine = ScoringEngine(self.application)
+        result = engine.evaluate()
+
+        # 5 rules = 5 dimensions
+        self.assertEqual(len(result.dimensions), 5)
+
+    def test_income_tier_inverse_scoring(self):
+        """Lower income should get higher points (inverse)."""
+        from .services import ScoringEngine
+
+        engine = ScoringEngine(self.application)
+        result = engine.evaluate()
+
+        income_dim = next(d for d in result.dimensions if d.criteria_type == 'INCOME_TIER')
+        # Total income = 1500 + 500 = 2000, range = 0-5000
+        # Inverse ratio = 1 - (2000/5000) = 0.6, points = 20 * 0.6 = 12
+        self.assertEqual(income_dim.awarded_points, 12)
+        self.assertTrue(income_dim.matched)
+        self.assertTrue(income_dim.is_auto)
+
+    def test_family_size_direct_scoring(self):
+        """Larger family should get more points (direct)."""
+        from .services import ScoringEngine
+
+        engine = ScoringEngine(self.application)
+        result = engine.evaluate()
+
+        family_dim = next(d for d in result.dimensions if d.criteria_type == 'FAMILY_SIZE')
+        # family_members = 7, range = 1-10
+        # ratio = (7-1)/(10-1) = 6/9 ≈ 0.667, points = 10 * 0.667 ≈ 7
+        self.assertEqual(family_dim.awarded_points, 7)
+        self.assertTrue(family_dim.matched)
+
+    def test_gpa_direct_scoring(self):
+        """Higher GPA should get more points."""
+        from .services import ScoringEngine
+
+        engine = ScoringEngine(self.application)
+        result = engine.evaluate()
+
+        gpa_dim = next(d for d in result.dimensions if d.criteria_type == 'GPA')
+        # gpa = 3.20, range = 0-4
+        # ratio = 3.20/4 = 0.8, points = 15 * 0.8 = 12
+        self.assertEqual(gpa_dim.awarded_points, 12)
+        self.assertTrue(gpa_dim.matched)
+
+    def test_special_cases_with_disability(self):
+        """Student with disability should get full points."""
+        from .services import ScoringEngine
+
+        engine = ScoringEngine(self.application)
+        result = engine.evaluate()
+
+        special_dim = next(d for d in result.dimensions if d.criteria_type == 'SPECIAL_CASES')
+        self.assertEqual(special_dim.awarded_points, 10)
+        self.assertTrue(special_dim.matched)
+
+    def test_social_research_is_manual(self):
+        """Social research should be marked as manual."""
+        from .services import ScoringEngine
+
+        engine = ScoringEngine(self.application)
+        result = engine.evaluate()
+
+        social_dim = next(d for d in result.dimensions if d.criteria_type == 'SOCIAL_RESEARCH')
+        self.assertEqual(social_dim.awarded_points, 0)
+        self.assertFalse(social_dim.is_auto)
+        self.assertTrue(result.has_manual_dimensions)
+
+    def test_total_auto_score_calculation(self):
+        """Total auto score should be sum of weighted auto-scored dimensions."""
+        from .services import ScoringEngine
+
+        engine = ScoringEngine(self.application)
+        result = engine.evaluate()
+
+        # income: 12 * 1.5 = 18
+        # family: 7 * 1.0 = 7
+        # gpa: 12 * 1.2 = 14.4
+        # special: 10 * 1.0 = 10
+        # social: 0 (manual)
+        expected_total = 18 + 7 + 14.4 + 10
+        self.assertAlmostEqual(result.total_auto_score, expected_total, places=1)
+
+    def test_calculate_auto_score_model_method(self):
+        """The model method should persist the score."""
+        self.application.calculate_auto_score()
+        self.application.refresh_from_db()
+
+        self.assertGreater(float(self.application.auto_score), 0)
+        self.assertIn('dimensions', self.application.auto_score_breakdown)
+        self.assertEqual(
+            len(self.application.auto_score_breakdown['dimensions']), 5
+        )
+
+    def test_suggested_scores_dict(self):
+        """get_suggested_scores should return a dict keyed by criteria_type."""
+        from .services import ScoringEngine
+
+        engine = ScoringEngine(self.application)
+        suggestions = engine.get_suggested_scores()
+
+        self.assertIn('income_tier', suggestions)
+        self.assertIn('gpa', suggestions)
+        self.assertIn('special_cases', suggestions)
+        self.assertEqual(suggestions['income_tier']['suggested_points'], 12)
+        self.assertFalse(suggestions['social_research']['is_auto'])
+

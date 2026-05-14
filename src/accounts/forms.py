@@ -40,7 +40,8 @@ class StudentProfileForm(forms.ModelForm):
         model = StudentProfile
         fields = (
             'program', 'level', 'student_id', 'gpa', 
-            'phone', 'address', 'disability_status'
+            'phone', 'address', 'disability_status',
+            'bank_name', 'bank_account_number', 'wallet_provider', 'wallet_number'
         )
         widgets = {
             'address': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),

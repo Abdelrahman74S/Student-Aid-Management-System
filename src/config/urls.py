@@ -10,6 +10,7 @@ urlpatterns = [
     path('aid/', include('aid_management.urls')),
     path('audit/', include('audit.urls')),
     path('assets/', include('assets_reporting.urls')),
+    path('notifications/', include('notifications.urls')),
 
 ]
 

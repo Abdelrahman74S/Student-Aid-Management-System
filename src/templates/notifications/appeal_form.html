@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{% trans "تقديم تظلم" %} | جامعة طنطا{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto py-10 px-4" dir="rtl">
+    <div class="mb-8">
+        <h1 class="text-3xl font-black text-gray-900">{% trans "تقديم تظلم" %}</h1>
+        <p class="text-gray-500 mt-2">{% trans "تظلم على الطلب رقم:" %} <span class="font-mono font-bold text-primary-600">{{ application.serial_number }}</span></p>
+    </div>
+
+    <!-- ملخص الطلب المرفوض -->
+    <div class="bg-red-50 p-6 rounded-2xl border border-red-100 mb-8">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
+                <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </div>
+            <div>
+                <p class="font-bold text-red-800">{% trans "الطلب مرفوض" %}</p>
+                <p class="text-xs text-red-500">{% trans "يمكنك تقديم تظلم واحد على هذا القرار" %}</p>
+            </div>
+        </div>
+        {% if application.decision_notes %}
+        <div class="bg-white/60 p-4 rounded-xl">
+            <p class="text-xs text-gray-500 mb-1">{% trans "سبب الرفض:" %}</p>
+            <p class="text-sm text-gray-800">{{ application.decision_notes }}</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- نموذج التظلم -->
+    <div class="bg-white p-8 rounded-3xl shadow-2xl border border-gray-100">
+        <form method="post" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="bg-red-50 text-red-700 p-4 rounded-2xl text-sm">
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+
+            <div>
+                <label for="id_reason" class="block font-bold text-gray-700 mb-2">{% trans "سبب التظلم" %} <span class="text-red-500">*</span></label>
+                <textarea name="reason" id="id_reason" rows="5" required
+                    class="w-full border border-gray-200 rounded-2xl p-4 text-sm focus:ring-2 focus:ring-primary-300 focus:border-primary-500 transition-all"
+                    placeholder="{% trans 'اشرح سبب تظلمك بالتفصيل...' %}">{{ form.reason.value|default:"" }}</textarea>
+                {% if form.reason.errors %}
+                    <p class="text-xs text-red-500 mt-1">{{ form.reason.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="id_supporting_documents" class="block font-bold text-gray-700 mb-2">{% trans "مستندات داعمة (اختياري)" %}</label>
+                <input type="file" name="supporting_documents" id="id_supporting_documents"
+                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                    class="w-full border border-gray-200 rounded-2xl p-3 text-sm file:mr-4 file:rounded-xl file:border-0 file:bg-primary-50 file:text-primary-700 file:font-bold file:px-4 file:py-2">
+                <p class="text-[10px] text-gray-400 mt-1">{% trans "PDF, صور، أو ملفات Word" %}</p>
+            </div>
+
+            <div class="pt-4">
+                <button type="submit" class="w-full bg-primary-600 text-white py-4 rounded-2xl font-black text-lg hover:bg-primary-700 transition-all shadow-xl shadow-primary-100">
+                    {% trans "تقديم التظلم" %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

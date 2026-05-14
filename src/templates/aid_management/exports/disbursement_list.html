@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 1cm;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            direction: rtl;
+            text-align: right;
+            color: #1f2937;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #1e3a8a;
+            padding-bottom: 10px;
+        }
+        .header h1 {
+            color: #1e3a8a;
+            font-size: 24px;
+            margin: 0;
+        }
+        .header p {
+            margin: 5px 0;
+            font-size: 14px;
+            color: #6b7280;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #e5e7eb;
+            padding: 8px;
+            text-align: center;
+            font-size: 10px;
+        }
+        th {
+            background-color: #1e3a8a;
+            color: white;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+        .footer {
+            margin-top: 50px;
+            text-align: left;
+            font-size: 12px;
+        }
+        .signature-box {
+            display: inline-block;
+            width: 200px;
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>كشف صرف المساعدات المالية - جامعة طنطا</h1>
+        <p>دورة: {{ cycle.name }} | التاريخ: {{ today|date:"d/m/Y" }}</p>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>الرقم</th>
+                <th>اسم الطالب</th>
+                <th>الرقم القومي</th>
+                <th>الرقم الجامعي</th>
+                <th>المبلغ (ج.م)</th>
+                <th>البنك</th>
+                <th>IBAN / رقم الحساب</th>
+                <th>المحفظة</th>
+                <th>رقم المحفظة</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for app in applications %}
+            <tr>
+                <td>{{ app.serial_number }}</td>
+                <td>{{ app.student.user.full_name }}</td>
+                <td>{{ app.student.user.national_id }}</td>
+                <td>{{ app.student.student_id }}</td>
+                <td>{{ app.budget_allocation.amount_allocated|default:0 }}</td>
+                <td>{{ app.student.bank_name|default:"-" }}</td>
+                <td>{{ app.student.bank_account_number|default:"-" }}</td>
+                <td>{{ app.student.wallet_provider|default:"-" }}</td>
+                <td>{{ app.student.wallet_number|default:"-" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <div class="signature-box">
+            <p>يعتمد،،،</p>
+            <p>رئيس اللجنة</p>
+            <br><br>
+            <p>_________________</p>
+        </div>
+    </div>
+</body>
+</html>

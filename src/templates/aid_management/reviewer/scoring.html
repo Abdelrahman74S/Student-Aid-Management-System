@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="max-w-5xl mx-auto py-10 px-4" dir="rtl">
+<div class="max-w-6xl mx-auto py-10 px-4" dir="rtl">
     <div class="mb-8 flex justify-between items-end border-b-2 border-gray-100 pb-6">
         <div>
             <h2 class="text-3xl font-black text-gray-900">تقييم طلب المساعدة</h2>
@@ -14,7 +14,9 @@
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- ================== العمود الأيسر: بيانات الطالب + التقييم التلقائي ================== -->
         <div class="lg:col-span-1 space-y-6">
+            <!-- بيانات المتقدم -->
             <div class="bg-gray-50 p-6 rounded-3xl border border-gray-200">
                 <h3 class="font-black text-lg mb-4 text-gray-800">بيانات المتقدم</h3>
                 <div class="space-y-4 text-sm">
@@ -26,10 +28,32 @@
                         <span class="text-gray-500">المعدل (GPA):</span>
                         <span class="font-bold text-primary-600">{{ application.student.gpa }}</span>
                     </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">المستوى الدراسي:</span>
+                        <span class="font-bold">{{ application.student.get_level_display }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">ذوي احتياجات خاصة:</span>
+                        <span class="font-bold {% if application.student.disability_status %}text-red-600{% endif %}">
+                            {% if application.student.disability_status %}نعم{% else %}لا{% endif %}
+                        </span>
+                    </div>
                     <hr class="border-gray-200">
                     <div class="flex justify-between">
-                        <span class="text-gray-500">دخل الأسرة:</span>
-                        <span class="font-bold text-green-600">{{ application.financial_assessment.total_income }} ج.م</span>
+                        <span class="text-gray-500">دخل الأب:</span>
+                        <span class="font-bold text-green-600">{{ application.financial_assessment.father_income|default:"—" }} ج.م</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">دخل الأم:</span>
+                        <span class="font-bold text-green-600">{{ application.financial_assessment.mother_income|default:"—" }} ج.م</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">عدد أفراد الأسرة:</span>
+                        <span class="font-bold">{{ application.financial_assessment.family_members|default:"—" }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">حالة السكن:</span>
+                        <span class="font-bold">{{ application.financial_assessment.housing_status|default:"—" }}</span>
                     </div>
                     <hr class="border-gray-200">
                     <div class="flex flex-col gap-2">
@@ -52,13 +76,124 @@
                 </div>
             </div>
             
+            <!-- ================== بطاقة البحث الاجتماعي ================== -->
+            {% if social_research %}
+            <div class="bg-gradient-to-br from-teal-50 to-emerald-50 p-6 rounded-3xl border border-teal-100 shadow-lg">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 bg-teal-100 rounded-2xl flex items-center justify-center">
+                        <svg class="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    </div>
+                    <div>
+                        <h3 class="font-black text-teal-900">البحث الاجتماعي</h3>
+                        <p class="text-[10px] text-teal-400">مُعبّأ بواسطة: {{ social_research.researcher_name }}</p>
+                    </div>
+                </div>
+                <div class="space-y-3 text-sm">
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">نوع السكن:</span>
+                        <span class="font-bold">{{ social_research.get_housing_type_display }}</span>
+                    </div>
+                    {% if social_research.monthly_rent > 0 %}
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">القيمة الإيجارية:</span>
+                        <span class="font-bold text-red-600">{{ social_research.monthly_rent }} ج.م</span>
+                    </div>
+                    {% endif %}
+                    <hr class="border-teal-100">
+                    <div>
+                        <p class="text-xs text-gray-500 mb-1">رأي الباحث وتوصيته:</p>
+                        <p class="text-sm text-gray-800 bg-white/70 p-3 rounded-xl leading-relaxed">{{ social_research.researcher_opinion }}</p>
+                    </div>
+                    {% if social_research.research_document %}
+                    <a href="{{ social_research.research_document.url }}" target="_blank"
+                       class="inline-flex items-center gap-2 text-xs bg-teal-100 hover:bg-teal-200 text-teal-700 px-3 py-2 rounded-lg font-bold transition-all">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        تحميل ملف البحث الميداني
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% else %}
+            <div class="bg-amber-50 p-5 rounded-3xl border border-amber-200">
+                <div class="flex items-center gap-2 mb-2">
+                    <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path></svg>
+                    <span class="font-bold text-amber-800 text-sm">لم يتم إرفاق البحث الاجتماعي بعد</span>
+                </div>
+                <p class="text-[10px] text-amber-600">يجب إكمال البحث الاجتماعي قبل اعتماد التقييم النهائي.</p>
+            </div>
+            {% endif %}
+
+            <!-- ================== بطاقة التقييم التلقائي ================== -->
+            {% if auto_breakdown and auto_breakdown.dimensions %}
+            <div class="bg-gradient-to-br from-indigo-50 to-purple-50 p-6 rounded-3xl border border-indigo-100 shadow-lg">
+                <div class="flex items-center gap-3 mb-5">
+                    <div class="w-10 h-10 bg-indigo-100 rounded-2xl flex items-center justify-center">
+                        <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+                    </div>
+                    <div>
+                        <h3 class="font-black text-indigo-900 text-lg">التقييم التلقائي</h3>
+                        <p class="text-[10px] text-indigo-400">محسوب بناءً على بيانات الطالب</p>
+                    </div>
+                </div>
+
+                <!-- الدرجة الإجمالية -->
+                <div class="bg-white/80 backdrop-blur rounded-2xl p-4 mb-5 text-center">
+                    <p class="text-xs text-gray-500 mb-1">الدرجة التلقائية</p>
+                    <p class="text-3xl font-black text-indigo-600">{{ auto_score }}</p>
+                    <p class="text-[10px] text-gray-400 mt-1">
+                        من أصل {{ auto_breakdown.max_possible_score }}
+                        ({{ auto_breakdown.score_percentage }}%)
+                    </p>
+                    <div class="w-full bg-gray-200 rounded-full h-2 mt-3">
+                        <div class="bg-gradient-to-l from-indigo-500 to-purple-500 h-2 rounded-full transition-all duration-500"
+                             style="width: {{ auto_breakdown.score_percentage }}%"></div>
+                    </div>
+                </div>
+
+                <!-- تفصيل كل بُعد -->
+                <div class="space-y-3">
+                    {% for dim in auto_breakdown.dimensions %}
+                    <div class="bg-white/60 rounded-xl p-3 {% if not dim.is_auto %}border-2 border-dashed border-amber-200{% endif %}">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-xs font-bold text-gray-700">{{ dim.criteria_display }}</span>
+                            <span class="text-xs font-black {% if dim.matched %}text-emerald-600{% elif not dim.is_auto %}text-amber-600{% else %}text-gray-400{% endif %}">
+                                {% if dim.is_auto %}
+                                    {{ dim.awarded_points }}/{{ dim.max_points }}
+                                {% else %}
+                                    يدوي ⚠️
+                                {% endif %}
+                            </span>
+                        </div>
+                        {% if dim.raw_value %}
+                        <p class="text-[10px] text-gray-400">القيمة: {{ dim.raw_value }}</p>
+                        {% endif %}
+                        <p class="text-[10px] text-gray-500 mt-1">{{ dim.reason }}</p>
+                        {% if dim.is_auto %}
+                        <div class="w-full bg-gray-200 rounded-full h-1 mt-2">
+                            {% widthratio dim.awarded_points dim.max_points 100 as pct %}
+                            <div class="bg-indigo-400 h-1 rounded-full" style="width: {{ pct }}%"></div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+
+                {% if auto_breakdown.has_manual_dimensions %}
+                <div class="mt-4 bg-amber-50 border border-amber-200 rounded-xl p-3">
+                    <p class="text-[10px] text-amber-700 font-bold">⚠️ يوجد أبعاد تحتاج تقييمك اليدوي (مثل البحث الاجتماعي)</p>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
             <div class="bg-amber-50 p-6 rounded-3xl border border-amber-100">
                 <p class="text-sm text-amber-800 leading-relaxed italic">
-                    "تذكر أن تقييمك يجب أن يكون موضوعياً تماماً. إذا وجد أي تعارض مصالح، يرجى الإبلاغ فوراً."
+                    "تذكر أن تقييمك يجب أن يكون موضوعياً تماماً. الاقتراحات التلقائية استرشادية فقط. إذا وجد أي تعارض مصالح، يرجى الإبلاغ فوراً."
                 </p>
             </div>
         </div>
 
+        <!-- ================== العمود الأيمن: نموذج التقييم ================== -->
         <div class="lg:col-span-2">
             <div class="bg-white p-8 rounded-3xl shadow-2xl border border-gray-100">
                 <form method="post" class="space-y-6">
@@ -70,6 +205,7 @@
                     </div>
                     {% endif %}
 
+                    <!-- حقول الدرجات مع الاقتراحات -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {% for field in form %}
                             {% if 'score' in field.name %}
@@ -79,6 +215,25 @@
                                 {% if field.help_text %}
                                     <p class="text-[10px] text-gray-400 italic">{{ field.help_text }}</p>
                                 {% endif %}
+                                
+                                <!-- زر اقتراح الدرجة التلقائية -->
+                                {% if auto_breakdown.dimensions %}
+                                    {% for dim in auto_breakdown.dimensions %}
+                                        {% if dim.is_auto %}
+                                            {% with score_field_name="score_"|add:dim.criteria_type|lower %}
+                                                {% if score_field_name == field.name %}
+                                                <button type="button"
+                                                    onclick="document.getElementById('{{ field.id_for_label }}').value='{{ dim.awarded_points }}'"
+                                                    class="text-[10px] bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-3 py-1 rounded-lg font-bold transition-all flex items-center gap-1 w-fit">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                                    استخدام الاقتراح: {{ dim.awarded_points }} نقطة
+                                                </button>
+                                                {% endif %}
+                                            {% endwith %}
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endif %}
+                                
                                 {% if field.errors %}
                                     <p class="text-xs text-red-500">{{ field.errors.0 }}</p>
                                 {% endif %}
@@ -89,6 +244,7 @@
 
                     <hr class="border-gray-100 my-6">
 
+                    <!-- حقول غير الدرجات -->
                     <div class="space-y-6">
                         {% for field in form %}
                             {% if 'score' not in field.name %}
@@ -111,9 +267,15 @@
                         {% endfor %}
                     </div>
 
-                    <div class="pt-6">
-                        <button type="submit" class="w-full bg-primary-600 text-white py-4 rounded-2xl font-black text-lg hover:bg-primary-700 transition-all shadow-xl shadow-primary-100">
-                            اعتماد الدرجات وحفظ التقييم
+                    <!-- أزرار الحفظ -->
+                    <div class="pt-6 flex flex-col sm:flex-row gap-4">
+                        <button type="submit" name="save_draft"
+                            class="flex-1 bg-gray-100 text-gray-700 py-4 rounded-2xl font-bold text-lg hover:bg-gray-200 transition-all border border-gray-200">
+                            حفظ كمسودة
+                        </button>
+                        <button type="submit" name="submit_final"
+                            class="flex-1 bg-primary-600 text-white py-4 rounded-2xl font-black text-lg hover:bg-primary-700 transition-all shadow-xl shadow-primary-100">
+                            اعتماد التقييم نهائياً
                         </button>
                     </div>
                 </form>
@@ -121,5 +283,4 @@
         </div>
     </div>
 </div>
-{% endblock %}
 {% endblock %}

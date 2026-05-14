@@ -71,4 +71,7 @@ urlpatterns = [
         views.CycleStatusTransitionView.as_view(), 
         name='cycle_status_transition'),
     
+    path('committee/export-disbursement/<int:cycle_id>/', 
+        views.DisbursementExportView.as_view(), 
+        name='export_disbursement'),
 ]
