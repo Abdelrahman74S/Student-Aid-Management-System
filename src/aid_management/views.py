@@ -17,7 +17,7 @@ from .models import (
     SupportCycle, AidApplication, ScoringRule, 
     CommitteeReview, BudgetAllocation
 )
-from .forms import StudentApplicationForm, CommitteeReviewForm
+from .forms import StudentApplicationForm, CommitteeReviewForm, ApplicationDocumentFormSet
 from accounts.models import User, StudentProfile, ReviewerProfile
 from accounts.mixins import (
     StudentRequiredMixin, ReviewerRequiredMixin, 
@@ -35,7 +35,7 @@ class StudentApplicationListView(LoginRequiredMixin, StudentRequiredMixin, ListV
 
     def get_queryset(self):
         return AidApplication.objects.filter(
-            student=self.request.user.studentprofile,
+            student=self.request.user.student_profile,
             deleted_at__isnull=True
         ).select_related('cycle')
 
@@ -49,25 +49,43 @@ class StudentApplicationCreateView(LoginRequiredMixin, StudentRequiredMixin, Cre
         self.active_cycle = SupportCycle.objects.filter(status='OPEN').first()
         if not self.active_cycle or not self.active_cycle.is_open_for_application:
             messages.error(request, "لا توجد دورة دعم متاحة للتقديم حالياً.")
-            return redirect('aid_management:student_application_list')
+            return redirect('aid_management:application_list')
 
         if AidApplication.objects.filter(
-            student=request.user.studentprofile,
+            student=request.user.student_profile,
             cycle=self.active_cycle
         ).exists():
             messages.warning(request, "لقد قمت بالتقديم بالفعل في هذه الدورة.")
-            return redirect('aid_management:student_application_list')
+            return redirect('aid_management:application_list')
 
         return super().dispatch(request, *args, **kwargs)
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.POST:
+            context['formset'] = ApplicationDocumentFormSet(self.request.POST, self.request.FILES, instance=self.object)
+        else:
+            context['formset'] = ApplicationDocumentFormSet(instance=self.object)
+        return context
+
     def form_valid(self, form):
-        form.instance.student = self.request.user.studentprofile
+        context = self.get_context_data()
+        formset = context['formset']
+        
+        form.instance.student = self.request.user.student_profile
         form.instance.cycle = self.active_cycle
-        messages.success(self.request, "تم حفظ المسودة بنجاح.")
-        return super().form_valid(form)
+        
+        if form.is_valid() and formset.is_valid():
+            self.object = form.save()
+            formset.instance = self.object
+            formset.save()
+            messages.success(self.request, "تم حفظ المسودة بنجاح.")
+            return redirect(self.get_success_url())
+        else:
+            return self.form_invalid(form)
 
     def get_success_url(self):
-        return reverse_lazy('aid_management:student_application_list')
+        return reverse_lazy('aid_management:application_list')
 
 
 class StudentApplicationUpdateView(LoginRequiredMixin, StudentRequiredMixin, UpdateView):
@@ -77,20 +95,40 @@ class StudentApplicationUpdateView(LoginRequiredMixin, StudentRequiredMixin, Upd
 
     def get_queryset(self):
         return AidApplication.objects.filter(
-            student=self.request.user.studentprofile,
+            student=self.request.user.student_profile,
             status='DRAFT'
         )
-    
-    def get_success_url(self):
-        return reverse_lazy('aid_management:student_application_list')
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.POST:
+            context['formset'] = ApplicationDocumentFormSet(self.request.POST, self.request.FILES, instance=self.object)
+        else:
+            context['formset'] = ApplicationDocumentFormSet(instance=self.object)
+        return context
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        formset = context['formset']
+        
+        if form.is_valid() and formset.is_valid():
+            self.object = form.save()
+            formset.instance = self.object
+            formset.save()
+            messages.success(self.request, "تم تحديث المسودة بنجاح.")
+            return redirect(self.get_success_url())
+        else:
+            return self.form_invalid(form)
+
+    def get_success_url(self):
+        return reverse_lazy('aid_management:application_list')
 
 class StudentApplicationSubmitView(LoginRequiredMixin, StudentRequiredMixin, View):
     def post(self, request, pk):
         application = get_object_or_404(
             AidApplication,
             id=pk,
-            student=request.user.studentprofile
+            student=request.user.student_profile
         )
 
         try:
@@ -102,7 +140,7 @@ class StudentApplicationSubmitView(LoginRequiredMixin, StudentRequiredMixin, Vie
         except ValidationError as e:
             messages.error(request, str(e))
 
-        return redirect('aid_management:student_application_detail', pk=pk)
+        return redirect('aid_management:application_detail', pk=pk)
 
 
 class StudentApplicationWithdrawView(LoginRequiredMixin, StudentRequiredMixin, View):
@@ -110,7 +148,7 @@ class StudentApplicationWithdrawView(LoginRequiredMixin, StudentRequiredMixin, V
         application = get_object_or_404(
             AidApplication,
             id=pk,
-            student=request.user.studentprofile
+            student=request.user.student_profile
         )
 
         try:
@@ -119,7 +157,7 @@ class StudentApplicationWithdrawView(LoginRequiredMixin, StudentRequiredMixin, V
         except ValidationError as e:
             messages.error(request, str(e))
 
-        return redirect('aid_management:student_application_list')
+        return redirect('aid_management:application_list')
 
 
 class StudentApplicationDetailView(LoginRequiredMixin, StudentRequiredMixin, DetailView):
@@ -129,7 +167,7 @@ class StudentApplicationDetailView(LoginRequiredMixin, StudentRequiredMixin, Det
 
     def get_queryset(self):
         return AidApplication.objects.filter(
-            student=self.request.user.studentprofile
+            student=self.request.user.student_profile
         )
 
     def get_context_data(self, **kwargs):
@@ -188,6 +226,9 @@ class ApplicationScoringView(LoginRequiredMixin, ReviewerRequiredMixin, UpdateVi
     model = CommitteeReview
     form_class = CommitteeReviewForm
     template_name = "aid_management/reviewer/scoring.html"
+
+    def get_queryset(self):
+        return CommitteeReview.objects.filter(reviewer=self.request.user)
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -249,7 +290,8 @@ class ApplicationRankListView(LoginRequiredMixin, CommitteeHeadRequiredMixin, Li
 
     def get_queryset(self):
         cycle_id = self.request.GET.get('cycle')
-        qs = AidApplication.objects.filter(status='SCORED')
+        managed_programs = self.request.user.committee_head_profile.managed_programs.all()
+        qs = AidApplication.objects.filter(status='SCORED', student__program__in=managed_programs)
         if cycle_id:
             qs = qs.filter(cycle_id=cycle_id)
         return qs.annotate(avg_score=Avg('reviews__total_score')).order_by('-avg_score')
@@ -257,7 +299,8 @@ class ApplicationRankListView(LoginRequiredMixin, CommitteeHeadRequiredMixin, Li
 
 class FinalDecisionUpdateView(LoginRequiredMixin, CommitteeHeadRequiredMixin, View):
     def post(self, request, pk):
-        application = get_object_or_404(AidApplication, id=pk)
+        managed_programs = request.user.committee_head_profile.managed_programs.all()
+        application = get_object_or_404(AidApplication, id=pk, student__program__in=managed_programs)
         decision = request.POST.get('decision')
         amount = request.POST.get('amount', 0)
 

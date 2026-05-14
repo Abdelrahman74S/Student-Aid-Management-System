@@ -7,7 +7,7 @@
             <p class="text-gray-500 mt-2">رقم الطلب: <span class="font-mono font-bold text-gray-700">{{ application.serial_number }}</span></p>
         </div>
         <div class="text-left">
-            <span class="px-4 py-2 bg-blue-50 text-blue-700 rounded-full text-sm font-bold">
+            <span class="px-4 py-2 bg-primary-50 text-primary-700 rounded-full text-sm font-bold">
                 دورة: {{ application.cycle.name }}
             </span>
         </div>
@@ -24,12 +24,30 @@
                     </div>
                     <div class="flex justify-between">
                         <span class="text-gray-500">المعدل (GPA):</span>
-                        <span class="font-bold text-blue-600">{{ application.student.gpa }}</span>
+                        <span class="font-bold text-primary-600">{{ application.student.gpa }}</span>
                     </div>
                     <hr class="border-gray-200">
                     <div class="flex justify-between">
                         <span class="text-gray-500">دخل الأسرة:</span>
                         <span class="font-bold text-green-600">{{ application.financial_assessment.total_income }} ج.م</span>
+                    </div>
+                    <hr class="border-gray-200">
+                    <div class="flex flex-col gap-2">
+                        <span class="text-gray-500">المستندات المرفقة:</span>
+                        {% if application.documents.exists %}
+                            <ul class="space-y-2">
+                            {% for doc in application.documents.all %}
+                                <li>
+                                    <a href="{{ doc.file.url }}" target="_blank" class="text-primary-600 hover:text-primary-800 font-bold flex items-center gap-2">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
+                                        {{ doc.document_type.name }}
+                                    </a>
+                                </li>
+                            {% endfor %}
+                            </ul>
+                        {% else %}
+                            <span class="text-gray-400 italic">لا توجد مستندات مرفقة.</span>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -94,7 +112,7 @@
                     </div>
 
                     <div class="pt-6">
-                        <button type="submit" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-lg hover:bg-blue-700 transition-all shadow-xl shadow-blue-100">
+                        <button type="submit" class="w-full bg-primary-600 text-white py-4 rounded-2xl font-black text-lg hover:bg-primary-700 transition-all shadow-xl shadow-primary-100">
                             اعتماد الدرجات وحفظ التقييم
                         </button>
                     </div>
@@ -103,4 +121,5 @@
         </div>
     </div>
 </div>
+{% endblock %}
 {% endblock %}

@@ -11,7 +11,7 @@ from accounts.mixins import (
 
 from .models import (
     ApplicationDocument, SocialResearchForm, 
-    CommitteeMeetingMinute, DisbursementVoucher, OfficialReport
+    CommitteeMeetingMinute, DisbursementVoucher, OfficialReport, SystemTemplate
 )
 from .forms import (
     ApplicationDocumentForm, DigitalSocialResearchForm, 
@@ -55,6 +55,9 @@ class DocumentDeleteView(LoginRequiredMixin, StudentRequiredMixin, DeleteView):
     success_url = reverse_lazy('assets_reporting:document_list')
     template_name = 'assets_reporting/student/document_confirm_delete.html'
 
+    def get_queryset(self):
+        return ApplicationDocument.objects.filter(application__student__user=self.request.user)
+
 
 class DisbursementVoucherDetailView(LoginRequiredMixin, StudentRequiredMixin, DetailView):
     """عرض قسيمة الصرف للطالب بعد صدور القرار النهائي"""
@@ -72,52 +75,46 @@ class DisbursementVoucherDetailView(LoginRequiredMixin, StudentRequiredMixin, De
         
 # --- 2. قسم الباحث الاجتماعي (البحث الميداني) ---
 
-class SocialResearchCreateView(LoginRequiredMixin, ReviewerRequiredMixin, CreateView):
+from accounts.mixins import ReviewerProgramRequiredMixin
+
+class SocialResearchCreateView(LoginRequiredMixin, ReviewerProgramRequiredMixin, CreateView):
     """واجهة للباحث لملء استمارة البحث الاجتماعي الرقمية"""
     model = SocialResearchForm
     form_class = DigitalSocialResearchForm
     template_name = 'assets_reporting/reviewer/social_research_form.html'
 
+    def get_object(self, queryset=None):
+        # ميكسين ReviewerProgramRequiredMixin يتوقع get_object ليرجع الطلب
+        return get_object_or_404(AidApplication, pk=self.kwargs.get('app_id'))
+
     def form_valid(self, form):
-        form.instance.application_id = self.kwargs.get('app_id')
+        form.instance.application = self.get_object()
         return super().form_valid(form)
     
     def get_success_url(self):
         return reverse_lazy('aid_management:reviewer_task_list')
 
 
-class SocialResearchUpdateView(LoginRequiredMixin, ReviewerRequiredMixin, UpdateView):
+class SocialResearchUpdateView(LoginRequiredMixin, ReviewerProgramRequiredMixin, UpdateView):
     """إمكانية تعديل بيانات البحث الاجتماعي أثناء مرحلة المراجعة"""
     model = SocialResearchForm
     form_class = DigitalSocialResearchForm
     template_name = 'assets_reporting/reviewer/social_research_form.html'
     
+    def get_object(self, queryset=None):
+        return get_object_or_404(SocialResearchForm, pk=self.kwargs.get('pk'))
+
+    def dispatch(self, request, *args, **kwargs):
+        # تحقق إضافي للـ UpdateView
+        obj = self.get_object()
+        if not request.user.reviewer_profile.assigned_programs.filter(id=obj.application.student.program_id).exists():
+            from django.contrib import messages
+            messages.error(request, "ليس لديك صلاحية لتعديل بحث هذا الطالب.")
+            return redirect('accounts:dashboard')
+        return super().dispatch(request, *args, **kwargs)
+
     def get_success_url(self):
         return reverse_lazy('aid_management:reviewer_task_list')
-
-
-# --- 3. قسم اللجنة (المحاضر والتقارير) ---
-
-class CommitteeMeetingListView(LoginRequiredMixin, ListView):
-    model = CommitteeMeetingMinute
-    template_name = 'assets_reporting/committee/meeting_list.html'
-    context_object_name = 'meetings'
-
-class CommitteeMeetingCreateView(LoginRequiredMixin, CreateView):
-    model = CommitteeMeetingMinute
-    form_class = CommitteeMeetingForm
-    template_name = 'assets_reporting/committee/meeting_form.html'
-    success_url = reverse_lazy('assets_reporting:meeting_list')
-
-class CommitteeMeetingDetailView(LoginRequiredMixin, DetailView):
-    model = CommitteeMeetingMinute
-    template_name = 'assets_reporting/committee/meeting_detail.html'
-    context_object_name = 'meeting'
-
-class OfficialReportDetailView(LoginRequiredMixin, DetailView):
-    model = OfficialReport
-    template_name = 'assets_reporting/committee/official_report.html'
-    context_object_name = 'report'
 
 
 # ==========================================
@@ -175,3 +172,34 @@ class VoucherVerifyView(LoginRequiredMixin, CommitteeHeadRequiredMixin, Template
             'is_valid': is_valid, 
             'voucher': voucher
         })
+
+from django.http import FileResponse, Http404
+from django.views import View
+
+class DownloadTemplatesView(LoginRequiredMixin, ListView):
+    """واجهة تتيح للمستخدمين تنزيل النماذج بناءً على أدوارهم (صلاحياتهم)"""
+    model = SystemTemplate
+    template_name = 'assets_reporting/system_templates_list.html'
+    context_object_name = 'templates'
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.role == 'A' or user.is_superuser:
+            return SystemTemplate.objects.all()
+        return SystemTemplate.objects.filter(role_required=user.role)
+
+class SecureTemplateDownloadView(LoginRequiredMixin, View):
+    """تحميل الملفات بشكل آمن مع التحقق من الصلاحيات لكل دور"""
+    def get(self, request, pk):
+        template = get_object_or_404(SystemTemplate, pk=pk)
+        
+        # السماح بالتحميل فقط إذا كان الدور مطابقاً أو كان المستخدم مديراً
+        if template.role_required != request.user.role and request.user.role != 'A':
+            from django.contrib import messages
+            messages.error(request, "ليس لديك صلاحية لتحميل هذا النموذج.")
+            return redirect('assets_reporting:template_list')
+        
+        if not template.file:
+            raise Http404("الملف غير موجود.")
+            
+        return FileResponse(template.file, as_attachment=True)

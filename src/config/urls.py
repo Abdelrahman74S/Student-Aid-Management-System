@@ -9,6 +9,8 @@ urlpatterns = [
     path('accounts/', include('accounts.urls')),
     path('aid/', include('aid_management.urls')),
     path('audit/', include('audit.urls')),
+    path('assets/', include('assets_reporting.urls')),
+
 ]
 
 if settings.DEBUG:

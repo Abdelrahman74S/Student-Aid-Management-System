@@ -2,6 +2,8 @@ from django.contrib.auth.mixins import AccessMixin
 from django.shortcuts import redirect
 from django.contrib import messages
 from .models import UserRoles
+from django.apps import apps
+
 
 class RoleRequiredMixin(AccessMixin):
     allowed_roles = []
@@ -11,7 +13,7 @@ class RoleRequiredMixin(AccessMixin):
         
         if request.user.role not in self.allowed_roles:
             messages.error(request, "عذراً، ليس لديك الصلاحية للوصول إلى هذه الصفحة.")
-            return redirect('accounts:dashboard_redirect')
+            return redirect('accounts:dashboard')
         
             
         return super().dispatch(request, *args, **kwargs)
@@ -38,10 +40,20 @@ class ReviewerProgramRequiredMixin(ReviewerRequiredMixin):
         response = super().dispatch(request, *args, **kwargs)
         if response.status_code != 200: return response
         
-        application = self.get_object() 
-        reviewer_profile = request.user.reviewer_profile
+        # Determine the application based on the view type
+        application = None
+        if hasattr(self, 'get_object'):
+            obj = self.get_object()
+            AidApplication = apps.get_model('aid_management', 'AidApplication')
+            if isinstance(obj, AidApplication):
+                application = obj
+            elif hasattr(obj, 'application'):
+                application = obj.application
         
-        if not reviewer_profile.assigned_programs.filter(id=application.student.program_id).exists():
-            messages.error(request, "ليس لديك صلاحية لمراجعة طلاب هذا القسم.")
-            return redirect('accounts:dashboard_redirect')
+        if application:
+            reviewer_profile = request.user.reviewer_profile
+            if not reviewer_profile.assigned_programs.filter(id=application.student.program_id).exists():
+                messages.error(request, "ليس لديك صلاحية لمراجعة طلاب هذا القسم.")
+                return redirect('accounts:dashboard')
+        
         return response

@@ -23,4 +23,8 @@ urlpatterns = [
 
     # --- 4. روابط الإدارة والخزينة (التحقق من الصرف) ---
     path('vouchers/verify/', views.VoucherVerifyView.as_view(), name='voucher_verify'),
+    
+    # --- 5. روابط النماذج العامة للتنزيل ---
+    path('templates/', views.DownloadTemplatesView.as_view(), name='template_list'),
+    path('templates/<int:pk>/download/', views.SecureTemplateDownloadView.as_view(), name='template_download'),
 ]

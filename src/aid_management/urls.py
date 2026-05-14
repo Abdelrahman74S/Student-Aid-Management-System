@@ -9,27 +9,27 @@ urlpatterns = [
     # =================================================================
     path('applications/', 
         views.StudentApplicationListView.as_view(), 
-        name='student_application_list'),
+        name='application_list'),
     
     path('applications/new/', 
         views.StudentApplicationCreateView.as_view(), 
-        name='student_application_create'),
+        name='application_create'),
     
     path('applications/<uuid:pk>/', 
         views.StudentApplicationDetailView.as_view(), 
-        name='student_application_detail'),
+        name='application_detail'),
     
     path('applications/<uuid:pk>/edit/', 
         views.StudentApplicationUpdateView.as_view(), 
-        name='student_application_update'),
+        name='application_update'),
     
     path('applications/<uuid:pk>/submit/', 
         views.StudentApplicationSubmitView.as_view(), 
-        name='student_application_submit'),
+        name='application_submit'),
     
     path('applications/<uuid:pk>/withdraw/', 
         views.StudentApplicationWithdrawView.as_view(), 
-        name='student_application_withdraw'),
+        name='application_withdraw'),
 
 
     # =================================================================

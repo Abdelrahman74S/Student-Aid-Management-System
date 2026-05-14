@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %}سجل اجتماعات اللجنة | جامعة طنطا{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto py-10 px-4 font-cairo" dir="rtl">
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-black text-gray-900">سجل اجتماعات اللجنة</h1>
+            <p class="text-gray-500 mt-2">عرض وتوثيق كافة محاضر اجتماعات لجنة التكافل الطلابي.</p>
+        </div>
+        <a href="{% url 'assets_reporting:meeting_create' %}" class="bg-primary-600 text-white px-6 py-3 rounded-2xl font-black hover:bg-primary-700 transition-all shadow-lg shadow-primary-100 flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            إنشاء محضر جديد
+        </a>
+    </div>
+
+    <div class="bg-white rounded-[2.5rem] shadow-xl border border-gray-100 overflow-hidden">
+        <table class="w-full text-right border-collapse">
+            <thead>
+                <tr class="bg-gray-50 border-b border-gray-100">
+                    <th class="px-8 py-5 text-sm font-black text-gray-400 uppercase">رقم الاجتماع</th>
+                    <th class="px-8 py-5 text-sm font-black text-gray-400 uppercase">التاريخ</th>
+                    <th class="px-8 py-5 text-sm font-black text-gray-400 uppercase">رئيس اللجنة</th>
+                    <th class="px-8 py-5 text-sm font-black text-gray-400 uppercase">عدد المقبولين</th>
+                    <th class="px-8 py-5 text-sm font-black text-gray-400 uppercase">النسخة الموقعة</th>
+                    <th class="px-8 py-5 text-sm font-black text-gray-400 uppercase">الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">
+                {% for meeting in meetings %}
+                <tr class="hover:bg-gray-50/50 transition-colors">
+                    <td class="px-8 py-5 font-bold text-gray-700">{{ meeting.meeting_number }}</td>
+                    <td class="px-8 py-5 text-gray-600 font-bold">{{ meeting.meeting_date|date:"Y/m/d" }}</td>
+                    <td class="px-8 py-5 text-gray-600">{{ meeting.head_of_committee.get_full_name }}</td>
+                    <td class="px-8 py-5">
+                        <span class="bg-primary-50 text-primary-700 px-3 py-1 rounded-full text-xs font-black">
+                            {{ meeting.approved_applications.count }} طالب
+                        </span>
+                    </td>
+                    <td class="px-8 py-5">
+                        {% if meeting.official_document %}
+                            <a href="{{ meeting.official_document.url }}" target="_blank" class="text-primary-600 hover:underline font-bold text-sm">عرض الملف</a>
+                        {% else %}
+                            <span class="text-gray-400 italic text-sm">غير مرفق</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-8 py-5">
+                        <a href="{% url 'assets_reporting:meeting_detail' meeting.pk %}" class="text-gray-900 hover:text-primary-600 font-black text-sm">التفاصيل</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="px-8 py-20 text-center text-gray-400 font-bold">لا توجد محاضر اجتماعات مسجلة حتى الآن.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

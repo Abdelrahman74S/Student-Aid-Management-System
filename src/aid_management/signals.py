@@ -50,10 +50,8 @@ def send_status_update_email(sender, instance, created, **kwargs):
         subject = f"تحديث بخصوص طلب المساعدة رقم: {instance.serial_number}"
         template_name = f'aid_management/emails/status_{instance.status.lower()}.html'
         context = {
-            'student_name': instance.student.user.get_full_name(),
-            'application_number': instance.serial_number,
-            'status_display': instance.get_status_display(),
             'decision_notes': instance.committee_decision,
+            'application': instance,
         }
         html_message = render_to_string(template_name, context)
         send_mail(
@@ -66,12 +64,45 @@ def send_disbursement_email(sender, instance, **kwargs):
     if instance.status == 'DISBURSED' and instance.application:
         subject = "تم صرف مبلغ الدعم المالي"
         context = {
-            'student_name': instance.application.student.user.get_full_name(),
-            'amount': instance.amount_disbursed,
-            'date': instance.disbursement_date
+            'date': instance.disbursement_date,
+            'application': instance.application,
         }
         html_message = render_to_string('aid_management/emails/disbursement_notification.html', context)
         send_mail(
             subject, strip_tags(html_message), settings.DEFAULT_FROM_EMAIL,
             [instance.application.student.user.email], html_message=html_message, fail_silently=True,
         )
+
+import uuid
+from datetime import timedelta
+
+@receiver(post_save, sender=AidApplication)
+def create_voucher_and_report_on_approval(sender, instance, created, **kwargs):
+    if instance.status == 'APPROVED' and hasattr(instance, 'budget_allocation') and instance.budget_allocation:
+        from assets_reporting.models import DisbursementVoucher, OfficialReport
+        from assets_reporting.utils import render_to_pdf
+        
+        voucher, voucher_created = DisbursementVoucher.objects.get_or_create(
+            application=instance,
+            defaults={
+                'voucher_number': f"VCH-{instance.serial_number}-{uuid.uuid4().hex[:6].upper()}",
+                'allocation': instance.budget_allocation,
+                'amount': instance.budget_allocation.amount_allocated,
+                'expiry_date': timezone.now().date() + timedelta(days=30),
+                'status': 'PENDING'
+            }
+        )
+        
+        report, report_created = OfficialReport.objects.get_or_create(
+            application=instance
+        )
+        
+        if report_created or not report.pdf_version:
+            context = {
+                'report': report,
+                'application': instance,
+            }
+            pdf_file = render_to_pdf('assets_reporting/committee/official_report.html', context)
+            if pdf_file:
+                file_name = f"official_report_{instance.serial_number}.pdf"
+                report.pdf_version.save(file_name, pdf_file, save=True)

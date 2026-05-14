@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}النماذج المستندية | جامعة طنطا{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto py-12 px-4 font-cairo" dir="rtl">
+    <div class="bg-white rounded-[2.5rem] shadow-2xl border border-gray-100 overflow-hidden">
+        <div class="bg-gradient-to-l from-primary-900 to-primary-800 p-10 text-white">
+            <h2 class="text-3xl font-black mb-2 font-tajawal">النماذج المستندية والمرفقات المطلوبة</h2>
+            <p class="text-primary-100 text-sm opacity-90">يمكنك تحميل النماذج الرسمية أدناه وتعبئتها بناءً على دورك في النظام.</p>
+        </div>
+
+        <div class="p-10">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {% for t in templates %}
+                <div class="bg-gray-50 border border-gray-200 p-6 rounded-2xl flex items-center justify-between hover:shadow-lg transition-all group">
+                    <div class="flex items-center gap-4">
+                        <div class="w-14 h-14 bg-white rounded-xl shadow-sm flex items-center justify-center text-primary-600">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-gray-900 text-lg group-hover:text-primary-600 transition-colors">{{ t.name }}</h3>
+                            <span class="text-xs text-gray-500 font-bold uppercase">{{ t.get_role_required_display }}</span>
+                        </div>
+                    </div>
+                    <a href="{% url 'assets_reporting:template_download' t.pk %}" class="bg-primary-600 hover:bg-primary-700 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        تحميل
+                    </a>
+                </div>
+                {% empty %}
+                <div class="col-span-full py-16 text-center text-gray-400 font-bold border-2 border-dashed border-gray-200 rounded-3xl">
+                    <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    لا توجد نماذج مسجلة في النظام لتنزيلها حالياً.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

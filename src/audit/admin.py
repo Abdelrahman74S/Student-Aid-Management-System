@@ -1,56 +1,53 @@
 from django.contrib import admin
-from django.utils.translation import gettext_lazy as _
 from .models import (
     DataAuditLog, ProcessActionLog, AccessLog, 
     BudgetAuditLog, SystemOverrideLog, FinancialIntegrityLog, ApplicationHistory
 )
 
-class ReadOnlyAuditAdmin(admin.ModelAdmin):
-    def has_add_permission(self, request): return False
-    def has_change_permission(self, request, obj=None): return False
-    def has_delete_permission(self, request, obj=None): return False
-
 @admin.register(DataAuditLog)
-class DataAuditLogAdmin(ReadOnlyAuditAdmin):
-    list_display = ('timestamp', 'user', 'entity_type', 'action', 'entity_id')
+class DataAuditLogAdmin(admin.ModelAdmin):
+    list_display = ('entity_type', 'action', 'user', 'timestamp')
     list_filter = ('action', 'entity_type', 'timestamp')
-    search_fields = ('entity_id', 'user__username', 'new_values')
-    readonly_fields = ('log_id', 'user', 'entity_type', 'entity_id', 'action', 'old_values', 'new_values', 'timestamp')
+    search_fields = ('entity_id', 'user__full_name')
+    readonly_fields = ('log_id', 'timestamp', 'old_values', 'new_values')
 
 @admin.register(ProcessActionLog)
-class ProcessActionLogAdmin(ReadOnlyAuditAdmin):
-    list_display = ('timestamp', 'action_name', 'user', 'cycle_name', 'ip_address')
+class ProcessActionLogAdmin(admin.ModelAdmin):
+    list_display = ('action_name', 'user', 'cycle_name', 'timestamp')
     list_filter = ('action_name', 'timestamp')
-    search_fields = ('action_name', 'notes', 'user__username')
+    search_fields = ('action_name', 'notes', 'user__full_name')
+    readonly_fields = ('timestamp',)
 
 @admin.register(AccessLog)
-class AccessLogAdmin(ReadOnlyAuditAdmin):
-    list_display = ('timestamp', 'user', 'event_type', 'ip_address')
+class AccessLogAdmin(admin.ModelAdmin):
+    list_display = ('user', 'event_type', 'ip_address', 'timestamp')
     list_filter = ('event_type', 'timestamp')
-    search_fields = ('user__username', 'ip_address', 'user_agent')
+    search_fields = ('user__full_name', 'ip_address')
+    readonly_fields = ('timestamp', 'user_agent')
 
 @admin.register(BudgetAuditLog)
-class BudgetAuditLogAdmin(ReadOnlyAuditAdmin):
-    list_display = ('timestamp', 'cycle', 'user', 'amount_before', 'amount_after')
-    list_filter = ('cycle', 'timestamp')
-    readonly_fields = ('cycle', 'user', 'amount_before', 'amount_after', 'reason', 'timestamp')
+class BudgetAuditLogAdmin(admin.ModelAdmin):
+    list_display = ('cycle', 'user', 'amount_before', 'amount_after', 'timestamp')
+    list_filter = ('timestamp', 'cycle')
+    search_fields = ('reason', 'user__full_name')
+    readonly_fields = ('timestamp',)
 
 @admin.register(SystemOverrideLog)
-class SystemOverrideLogAdmin(ReadOnlyAuditAdmin):
-    list_display = ('timestamp', 'admin_user', 'application', 'override_type')
+class SystemOverrideLogAdmin(admin.ModelAdmin):
+    list_display = ('admin_user', 'application', 'override_type', 'timestamp')
     list_filter = ('override_type', 'timestamp')
-    search_fields = ('reason', 'admin_user__username', 'application__serial_number')
+    search_fields = ('reason', 'admin_user__full_name', 'application__serial_number')
+    readonly_fields = ('timestamp', 'previous_state', 'new_state')
 
 @admin.register(FinancialIntegrityLog)
-class FinancialIntegrityLogAdmin(ReadOnlyAuditAdmin):
-    list_display = ('timestamp', 'cycle', 'is_balanced', 'discrepancy')
-    list_filter = ('is_balanced', 'check_type')
-    
-    def get_queryset(self, request):
-        return super().get_queryset(request).order_by('-is_balanced', '-timestamp')
+class FinancialIntegrityLogAdmin(admin.ModelAdmin):
+    list_display = ('cycle', 'total_budget', 'sum_of_allocations', 'discrepancy', 'is_balanced', 'timestamp')
+    list_filter = ('is_balanced', 'timestamp', 'cycle')
+    readonly_fields = ('timestamp',)
 
 @admin.register(ApplicationHistory)
-class ApplicationHistoryAdmin(ReadOnlyAuditAdmin):
+class ApplicationHistoryAdmin(admin.ModelAdmin):
     list_display = ('application', 'from_status', 'to_status', 'changed_by', 'timestamp')
     list_filter = ('from_status', 'to_status', 'timestamp')
-    search_fields = ('application__serial_number', 'changed_by__username', 'notes')
+    search_fields = ('application__serial_number', 'changed_by__full_name')
+    readonly_fields = ('timestamp',)

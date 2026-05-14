@@ -39,7 +39,7 @@
             </thead>
             <tbody class="divide-y divide-gray-50">
                 {% for app in applications %}
-                <tr class="hover:bg-blue-50/30 transition-all group">
+                <tr class="hover:bg-primary-50/30 transition-all group">
                     <td class="p-6">
                         <div class="w-10 h-10 rounded-xl flex items-center justify-center font-black 
                             {% if forloop.counter <= 3 %} bg-emerald-100 text-emerald-700 {% else %} bg-gray-100 text-gray-500 {% endif %}">
@@ -54,7 +54,7 @@
 
                     <td class="p-6">
                         <div class="flex items-center gap-2">
-                            <span class="text-lg font-black text-blue-600">{{ app.total_score }}</span>
+                            <span class="text-lg font-black text-primary-600">{{ app.total_score }}</span>
                             <span class="text-[10px] text-gray-400 font-bold">نقطة</span>
                         </div>
                     </td>
@@ -84,11 +84,11 @@
 
                     <td class="p-6 text-center">
                         {% if app.status == 'SCORED' %}
-                            <a href="{% url 'aid_management:final_decision' app.id %}" class="inline-block bg-blue-600 text-white px-6 py-2.5 rounded-xl text-xs font-black hover:bg-blue-700 transition-all shadow-lg shadow-blue-100">
+                            <a href="{% url 'aid_management:final_decision' app.id %}" class="inline-block bg-primary-600 text-white px-6 py-2.5 rounded-xl text-xs font-black hover:bg-primary-700 transition-all shadow-lg shadow-primary-100">
                                 اتخاذ قرار
                             </a>
                         {% else %}
-                            <a href="{% url 'aid_management:application_detail' app.id %}" class="text-xs font-bold text-gray-400 hover:text-blue-600 underline">عرض التفاصيل</a>
+                            <a href="{% url 'aid_management:application_detail' app.id %}" class="text-xs font-bold text-gray-400 hover:text-primary-600 underline">عرض التفاصيل</a>
                         {% endif %}
                     </td>
                 </tr>

@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block title %}التقرير الرسمي للطلب | جامعة طنطا{% endblock %}
+
+{% block extra_css %}
+<style>
+    @media print {
+        body * { visibility: hidden; }
+        #printable-area, #printable-area * { visibility: visible; }
+        #printable-area { position: absolute; left: 0; top: 0; width: 100%; }
+        .no-print { display: none; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-10 px-4 font-cairo" dir="rtl">
+    <div class="mb-6 flex justify-between no-print">
+        <a href="{% url 'assets_reporting:report_list' %}" class="text-gray-500 font-bold hover:underline">← العودة للأرشيف</a>
+        <button onclick="window.print()" class="bg-primary-600 text-white px-6 py-2 rounded-xl font-black shadow-lg">طباعة التقرير</button>
+    </div>
+
+    <div id="printable-area" class="bg-white p-12 border-4 border-double border-gray-200 shadow-2xl rounded-sm">
+        <div class="flex justify-between items-start border-b-2 border-gray-900 pb-8 mb-10">
+            <div class="text-right">
+                <h1 class="text-2xl font-black">جامعة طنطا</h1>
+                <h2 class="text-xl font-bold">كلية العلوم</h2>
+                <h3 class="text-lg">لجنة التكافل الطلابي</h3>
+            </div>
+            <div class="text-center">
+                <div class="w-20 h-20 bg-gray-900 text-white flex items-center justify-center font-black text-3xl mx-auto mb-2">ط</div>
+                <p class="text-xs font-mono">{{ report.serial_number }}</p>
+            </div>
+            <div class="text-left font-bold">
+                <p>تاريخ الصدور: {{ report.generated_at|date:"Y/m/d" }}</p>
+                <p>رقم التقرير: {{ report.id }}</p>
+            </div>
+        </div>
+
+        <div class="text-center mb-10">
+            <h2 class="text-2xl font-black underline decoration-2 underline-offset-8">تقرير رسمي وقرار اللجنة النهائي</h2>
+        </div>
+
+        <div class="space-y-8 text-lg leading-loose">
+            <p>بناءً على الطلب المقدم من الطالب/ <span class="font-black underline">{{ report.application.student.user.get_full_name }}</span>، المقيد بكلية <span class="font-bold">{{ report.application.student.program.name }}</span>، بخصوص الحصول على مساعدة مالية من صندوق التكافل.</p>
+            
+            <div class="bg-gray-50 p-6 rounded-xl border border-gray-200">
+                <h4 class="font-black mb-4">خلاصة البحث الاجتماعي:</h4>
+                <p class="text-sm text-gray-700 italic">"{{ report.application.social_research.researcher_opinion }}"</p>
+            </div>
+
+            <p>وبعد مراجعة المعايير واستيفاء النقاط المطلوبة، فقد قررت اللجنة في جلستها المنعقدة بتاريخ <span class="font-bold">{{ report.application.committee_review.created_at|date:"Y/m/d" }}</span> ما يلي:</p>
+
+            <div class="p-8 border-2 border-gray-900 rounded-3xl text-center">
+                <p class="text-xl mb-4">الموافقة على صرف مساعدة مالية وقدرها:</p>
+                <p class="text-4xl font-black">{{ report.application.budget_allocation.amount }} جنيهاً مصرياً فقط لا غير</p>
+            </div>
+
+            <p class="text-sm text-gray-500">تم استخراج هذا التقرير آلياً من نظام جامعة طنطا لإدارة المساعدات الطلابية، ويعتبر وثيقة رسمية مؤرشفة (Snapshot) لا تقبل التعديل.</p>
+        </div>
+
+        <div class="mt-20 flex justify-between font-black">
+            <div class="text-center">
+                <p class="mb-10">الباحث الاجتماعي</p>
+                <p>..........................</p>
+            </div>
+            <div class="text-center">
+                <p class="mb-10">رئيس اللجنة</p>
+                <p>..........................</p>
+            </div>
+            <div class="text-center">
+                <p class="mb-10">يعتمد،، عميد الكلية</p>
+                <p>..........................</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

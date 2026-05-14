@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'audit',
     'accounts',
     'aid_management',
+    'assets_reporting',
     
     'tailwind',
     'theme',
@@ -100,12 +101,22 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
+import sys
+
 DATABASES = {
     'default': dj_database_url.config(
         default=os.getenv('DATABASE_URL'),
         ssl_require=True,
     )
 }
+
+# Use SQLite for testing to avoid connection issues and speed up tests
+if 'test' in sys.argv:
+    DATABASES['default'] = {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+
 
 
 # Password validation

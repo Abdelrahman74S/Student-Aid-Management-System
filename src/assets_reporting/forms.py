@@ -24,7 +24,7 @@ class ApplicationDocumentForm(TailwindFormMixin, forms.ModelForm):
 class DigitalSocialResearchForm(TailwindFormMixin, forms.ModelForm):
     class Meta:
         model = SocialResearchForm
-        fields = ['housing_type', 'monthly_rent', 'researcher_name', 'researcher_opinion']
+        fields = ['housing_type', 'monthly_rent', 'researcher_name', 'researcher_opinion', 'research_document']
         labels = {
             'housing_type': _('نوع السكن الحالي'),
             'monthly_rent': _('قيمة الإيجار الشهري (إن وجد)'),
@@ -38,7 +38,7 @@ class DigitalSocialResearchForm(TailwindFormMixin, forms.ModelForm):
 class CommitteeMeetingForm(TailwindFormMixin, forms.ModelForm):
     class Meta:
         model = CommitteeMeetingMinute
-        fields = ['meeting_date', 'meeting_number', 'head_of_committee', 'attendees', 'approved_applications']
+        fields = ['meeting_date', 'meeting_number', 'head_of_committee', 'attendees', 'approved_applications', 'official_document']
         labels = {
             'meeting_date': _('تاريخ انعقاد الاجتماع'),
             'meeting_number': _('رقم محضر الاجتماع'),

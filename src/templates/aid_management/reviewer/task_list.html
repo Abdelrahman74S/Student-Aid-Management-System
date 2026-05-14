@@ -3,10 +3,10 @@
 <div class="max-w-6xl mx-auto py-10 px-4" dir="rtl">
     <div class="flex justify-between items-center mb-8">
         <h2 class="text-3xl font-black text-gray-900 flex items-center gap-3">
-            <span class="w-2 h-10 bg-blue-600 rounded-full"></span>
+            <span class="w-2 h-10 bg-primary-600 rounded-full"></span>
             قائمة طلبات المراجعة المخصصة
         </h2>
-        <div class="bg-blue-50 text-blue-700 px-4 py-2 rounded-2xl text-sm font-bold border border-blue-100">
+        <div class="bg-primary-50 text-primary-700 px-4 py-2 rounded-2xl text-sm font-bold border border-primary-100">
             عدد المهام: {{ tasks|length }}
         </div>
     </div>
@@ -24,8 +24,8 @@
             </thead>
             <tbody class="divide-y divide-gray-50">
                 {% for task in tasks %}
-                <tr class="hover:bg-blue-50/40 transition-all group">
-                    <td class="p-5 font-mono text-blue-600 font-bold">
+                <tr class="hover:bg-primary-50/40 transition-all group">
+                    <td class="p-5 font-mono text-primary-600 font-bold">
                         {{ task.application.serial_number }}
                     </td>
                     
@@ -57,7 +57,7 @@
                     <td class="p-5 text-center">
                         {% if not task.is_submitted %}
                             <a href="{% url 'aid_management:application_scoring' task.id %}" 
-                               class="inline-block bg-blue-600 text-white px-6 py-2.5 rounded-xl text-sm font-black hover:bg-blue-700 hover:shadow-lg hover:-translate-y-0.5 transition-all shadow-md shadow-blue-100">
+                               class="inline-block bg-primary-600 text-white px-6 py-2.5 rounded-xl text-sm font-black hover:bg-primary-700 hover:shadow-lg hover:-translate-y-0.5 transition-all shadow-md shadow-primary-100">
                                 بدء التقييم
                             </a>
                         {% else %}

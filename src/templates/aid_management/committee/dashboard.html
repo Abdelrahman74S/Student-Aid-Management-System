@@ -7,7 +7,7 @@
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
         <div>
             <h1 class="text-3xl font-black text-gray-900">لوحة الإدارة والمتابعة</h1>
-            <p class="text-gray-500 mt-1">الدورة النشطة: <span class="text-blue-600 font-bold">{{ active_cycle.name|default:"لا يوجد دورة نشطة حالياً" }}</span></p>
+            <p class="text-gray-500 mt-1">الدورة النشطة: <span class="text-primary-600 font-bold">{{ active_cycle.name|default:"لا يوجد دورة نشطة حالياً" }}</span></p>
         </div>
         <div class="flex gap-3">
             <form action="{% url 'aid_management:cycle_transition' %}" method="post">
@@ -22,7 +22,7 @@
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
         <div class="bg-white p-6 rounded-4xl border border-gray-100 shadow-xl shadow-gray-100/50">
-            <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-4 text-xl">📝</div>
+            <div class="w-12 h-12 bg-primary-50 text-primary-600 rounded-2xl flex items-center justify-center mb-4 text-xl">📝</div>
             <p class="text-sm font-bold text-gray-400">إجمالي الطلبات</p>
             <h3 class="text-2xl font-black text-gray-900">{{ total_apps_count }}</h3>
         </div>
@@ -71,17 +71,17 @@
                             <span class="text-xs font-black text-gray-900">{{ active_cycle.disbursed_budget }} ج.م</span>
                         </div>
                         <div class="w-full bg-gray-100 rounded-full h-3">
-                            <div class="bg-blue-600 h-3 rounded-full" style="width: {{ budget_disbursed_percent }}%"></div>
+                            <div class="bg-primary-600 h-3 rounded-full" style="width: {{ budget_disbursed_percent }}%"></div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-blue-900 p-8 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden">
+            <div class="bg-primary-900 p-8 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden">
                 <div class="relative z-10">
                     <h3 class="font-black text-lg mb-2">توزيع المهام الآلي</h3>
-                    <p class="text-blue-200 text-xs leading-relaxed mb-6">تشغيل خوارزمية (Round-robin) لتوزيع طلبات الطلاب على المراجعين المتاحين بالتساوي.</p>
-                    <a href="{% url 'aid_management:automated_distribution' %}" class="inline-block w-full text-center bg-white text-blue-900 py-3 rounded-2xl font-black text-sm hover:bg-blue-50 transition-all">
+                    <p class="text-primary-200 text-xs leading-relaxed mb-6">تشغيل خوارزمية (Round-robin) لتوزيع طلبات الطلاب على المراجعين المتاحين بالتساوي.</p>
+                    <a href="{% url 'aid_management:automated_distribution' %}" class="inline-block w-full text-center bg-white text-primary-900 py-3 rounded-2xl font-black text-sm hover:bg-primary-50 transition-all">
                         بدء التوزيع الآن
                     </a>
                 </div>
@@ -95,7 +95,7 @@
             <div class="bg-white rounded-[2.5rem] shadow-2xl border border-gray-100 overflow-hidden">
                 <div class="p-8 border-b border-gray-50 flex justify-between items-center">
                     <h3 class="font-black text-gray-900 text-lg">أعلى الطلاب استحقاقاً (Ranking)</h3>
-                    <a href="{% url 'aid_management:application_rank_list' %}" class="text-blue-600 text-sm font-bold hover:underline">عرض الكل ←</a>
+                    <a href="{% url 'aid_management:application_rank_list' %}" class="text-primary-600 text-sm font-bold hover:underline">عرض الكل ←</a>
                 </div>
                 <table class="w-full text-right">
                     <thead class="bg-gray-50 text-gray-400 text-[10px] uppercase font-black">
@@ -114,7 +114,7 @@
                                 <div class="text-[10px] text-gray-400 font-mono">{{ app.serial_number }}</div>
                             </td>
                             <td class="p-5">
-                                <span class="font-black text-blue-600">{{ app.total_score }}</span>
+                                <span class="font-black text-primary-600">{{ app.total_score }}</span>
                             </td>
                             <td class="p-5">
                                 {% if app.status == 'SCORED' %}
@@ -124,7 +124,7 @@
                                 {% endif %}
                             </td>
                             <td class="p-5">
-                                <a href="{% url 'aid_management:final_decision' app.id %}" class="text-xs font-bold text-gray-400 hover:text-blue-600 underline">معالجة</a>
+                                <a href="{% url 'aid_management:final_decision' app.id %}" class="text-xs font-bold text-gray-400 hover:text-primary-600 underline">معالجة</a>
                             </td>
                         </tr>
                         {% endfor %}

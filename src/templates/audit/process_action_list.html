@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8 font-cairo" dir="rtl">
+    <h1 class="text-3xl font-black text-gray-900 mb-8 flex items-center gap-2">
+        <span class="w-1.5 h-8 bg-primary-600 rounded-full"></span>
+        {% trans "سجلات القرارات الإدارية" %}
+    </h1>
+
+    <div class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-right whitespace-nowrap">
+                <thead class="bg-gray-50 border-b border-gray-100">
+                    <tr>
+                        <th class="px-6 py-4 text-sm font-black text-gray-600">{% trans "وقت وتاريخ القرار" %}</th>
+                        <th class="px-6 py-4 text-sm font-black text-gray-600">{% trans "متخذ القرار" %}</th>
+                        <th class="px-6 py-4 text-sm font-black text-gray-600">{% trans "الإجراء المتخذ" %}</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50">
+                    {% for action in process_actions %}
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4 text-sm text-gray-500" dir="ltr" style="text-align: right;">{{ action.timestamp|date:"Y/m/d H:i" }}</td>
+                        <td class="px-6 py-4 text-sm font-bold text-gray-800">{{ action.user.get_full_name|default:action.user.username }}</td>
+                        <td class="px-6 py-4 text-sm text-primary-700 font-bold">{{ action.action_description }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="px-6 py-10 text-center text-gray-400 font-bold text-sm">
+                            لا توجد قرارات إدارية مسجلة.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

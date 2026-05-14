@@ -2,9 +2,14 @@ import uuid
 import os
 from django.db import models
 from django.conf import settings
+from django.utils.translation import gettext_lazy as _
 from aid_management.models import AidApplication, SupportCycle 
 import hashlib
 import hmac
+import qrcode
+from io import BytesIO
+from django.core.files import File
+
 
 def get_file_path(instance, filename):
     ext = filename.split('.')[-1]
@@ -14,11 +19,15 @@ def get_file_path(instance, filename):
 # ==============================
 
 class DocumentType(models.Model):
-    code = models.CharField(max_length=50, unique=True)
-    name = models.CharField(max_length=255)
+    code = models.CharField(max_length=50, unique=True, verbose_name=_("كود النوع"))
+    name = models.CharField(max_length=255, verbose_name=_("اسم المستند"))
 
     def __str__(self):
         return self.name
+    
+    class Meta:
+        verbose_name = _("نوع مستند")
+        verbose_name_plural = _("أنواع المستندات")
 
 # ==============================
 class ApplicationDocument(models.Model):
@@ -72,7 +81,11 @@ class OfficialReport(models.Model):
         verbose_name_plural = "أرشيف التقارير الرسمية"
 
 class SocialResearchForm(models.Model):
-    HOUSING_TYPES = [('OWN', 'تمليك'), ('RENT', 'إيجار'), ('OLD_RENT', 'إيجار قديم')]
+    HOUSING_TYPES = [
+        ('OWN', _('تمليك')), 
+        ('RENT', _('إيجار')), 
+        ('OLD_RENT', _('إيجار قديم'))
+    ]
     
     application = models.OneToOneField('aid_management.AidApplication', on_delete=models.CASCADE, related_name='social_research')
     
@@ -80,8 +93,10 @@ class SocialResearchForm(models.Model):
     monthly_rent = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="القيمة الإيجارية")
     
     
-    researcher_opinion = models.TextField(verbose_name="رأي الباحث الاجتماعي وتوصيته")
-    researcher_name = models.CharField(max_length=255)
+    researcher_opinion = models.TextField(verbose_name=_("رأي الباحث الاجتماعي وتوصيته"))
+    researcher_name = models.CharField(max_length=255, verbose_name=_("اسم الباحث"))
+    
+    research_document = models.FileField(upload_to='research_documents/%Y/', null=True, blank=True, verbose_name="ملف البحث الميداني (Word/PDF)")
     
     last_updated = models.DateTimeField(auto_now=True)
 
@@ -135,6 +150,7 @@ class DisbursementVoucher(models.Model):
     expiry_date = models.DateField()
 
     verification_hash = models.CharField(max_length=100, unique=True)
+    qr_code = models.ImageField(upload_to='vouchers/qr/', blank=True, null=True, verbose_name="رمز QR")
     is_printed        = models.BooleanField(default=False)
     printed_at        = models.DateTimeField(null=True, blank=True)
 
@@ -144,7 +160,7 @@ class DisbursementVoucher(models.Model):
 
     def _generate_hash(self):
         secret  = settings.SECRET_KEY.encode()
-        message = f"{self.voucher_number}:{self.amount}:{self.application_id}".encode()
+        message = f"{self.voucher_number}:{self.amount:.2f}:{self.application_id}".encode()
         return hmac.new(secret, message, hashlib.sha256).hexdigest()
 
     def clean(self):
@@ -166,8 +182,39 @@ class DisbursementVoucher(models.Model):
         if not self.verification_hash:
             self.verification_hash = self._generate_hash()
 
+        if not self.qr_code:
+            qr = qrcode.QRCode(version=1, box_size=10, border=4)
+            qr.add_data(f"Voucher: {self.voucher_number}\nHash: {self.verification_hash}")
+            qr.make(fit=True)
+            img = qr.make_image(fill_color="black", back_color="white")
+            buffer = BytesIO()
+            img.save(buffer, format="PNG")
+            buffer.seek(0)
+            file_name = f"qr_{self.voucher_number}.png"
+            self.qr_code.save(file_name, File(buffer), save=False)
+
         self.full_clean()
         super().save(*args, **kwargs)
 
     def verify(self, hash_to_check: str) -> bool:
         return hmac.compare_digest(self.verification_hash, hash_to_check)
+
+class SystemTemplate(models.Model):
+    ROLE_CHOICES = [
+        ('S', 'طالب'),
+        ('R', 'مُراجع (باحث اجتماعي)'),
+        ('C', 'رئيس/عضو لجنة'),
+        ('A', 'مدير النظام'),
+        ('D', 'مراقب/مدقق'),
+    ]
+    name = models.CharField(max_length=255, verbose_name="اسم النموذج")
+    file = models.FileField(upload_to='system_templates/', verbose_name="ملف النموذج")
+    role_required = models.CharField(max_length=1, choices=ROLE_CHOICES, verbose_name="الدور المخصص له")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "نموذج نظام"
+        verbose_name_plural = "نماذج النظام المخصصة"
+
+    def __str__(self):
+        return f"{self.name} - ({self.get_role_required_display()})"

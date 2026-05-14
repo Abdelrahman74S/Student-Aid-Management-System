@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block title %}سجل التقارير الرسمية | جامعة طنطا{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto py-10 px-4 font-cairo" dir="rtl">
+    <div class="mb-8">
+        <h1 class="text-3xl font-black text-gray-900">أرشيف التقارير الرسمية</h1>
+        <p class="text-gray-500 mt-2">سجل بكافة التقارير النهائية المؤرشفة (Snapshots) للطلبات.</p>
+    </div>
+
+    <div class="bg-white rounded-[2.5rem] shadow-xl border border-gray-100 overflow-hidden">
+        <table class="w-full text-right border-collapse">
+            <thead>
+                <tr class="bg-gray-50 border-b border-gray-100">
+                    <th class="px-8 py-5 text-sm font-black text-gray-400 uppercase">اسم الطالب</th>
+                    <th class="px-8 py-5 text-sm font-black text-gray-400 uppercase">رقم الطلب</th>
+                    <th class="px-8 py-5 text-sm font-black text-gray-400 uppercase">تاريخ الأرشفة</th>
+                    <th class="px-8 py-5 text-sm font-black text-gray-400 uppercase">بواسطة</th>
+                    <th class="px-8 py-5 text-sm font-black text-gray-400 uppercase">الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">
+                {% for report in reports %}
+                <tr class="hover:bg-gray-50/50 transition-colors">
+                    <td class="px-8 py-5 font-bold text-gray-700">{{ report.application.student.user.get_full_name }}</td>
+                    <td class="px-8 py-5 font-mono text-gray-500 text-sm">{{ report.application.serial_number }}</td>
+                    <td class="px-8 py-5 text-gray-600">{{ report.generated_at|date:"Y/m/d" }}</td>
+                    <td class="px-8 py-5 text-gray-600">{{ report.generated_by.get_full_name|default:"النظام" }}</td>
+                    <td class="px-8 py-5">
+                        <a href="{% url 'assets_reporting:report_detail' report.pk %}" class="text-primary-600 hover:text-primary-800 font-black text-sm">عرض الأرشيف</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="px-8 py-20 text-center text-gray-400 font-bold">لا توجد تقارير مؤرشفة حالياً.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

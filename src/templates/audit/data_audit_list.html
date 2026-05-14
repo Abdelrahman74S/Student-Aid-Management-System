@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8 font-cairo" dir="rtl">
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-black text-gray-900 flex items-center gap-2">
+            <span class="w-1.5 h-8 bg-primary-600 rounded-full"></span>
+            {% trans "سجلات تدقيق البيانات (Data Audit)" %}
+        </h1>
+    </div>
+
+    <div class="bg-white p-6 rounded-3xl shadow-xl border border-gray-100 mb-8">
+        <form method="get" class="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
+            <div class="md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4">
+                {{ filter.form.as_p }}
+            </div>
+            <div class="md:col-span-1">
+                <button type="submit" class="w-full bg-primary-600 hover:bg-primary-700 text-white font-bold py-2.5 px-4 rounded-xl transition-all shadow-md shadow-primary-100">
+                    {% trans "تصفية النتائج" %}
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-right whitespace-nowrap">
+                <thead class="bg-gray-50 border-b border-gray-100">
+                    <tr>
+                        <th class="px-6 py-4 text-sm font-black text-gray-600">{% trans "وقت وتاريخ الحدث" %}</th>
+                        <th class="px-6 py-4 text-sm font-black text-gray-600">{% trans "المستخدم" %}</th>
+                        <th class="px-6 py-4 text-sm font-black text-gray-600">{% trans "الإجراء" %}</th>
+                        <th class="px-6 py-4 text-sm font-black text-gray-600">{% trans "الجدول المتأثر" %}</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50">
+                    {% for log in data_logs %}
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4 text-sm text-gray-600" dir="ltr" style="text-align: right;">{{ log.timestamp|date:"Y/m/d H:i" }}</td>
+                        <td class="px-6 py-4 text-sm font-bold text-gray-800">{{ log.user.get_full_name|default:log.user.username }}</td>
+                        <td class="px-6 py-4">
+                            <span class="px-3 py-1 bg-primary-50 text-primary-700 rounded-lg text-xs font-bold">{{ log.get_action_display|default:log.action }}</span>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-500 font-mono">{{ log.table_name }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="px-6 py-10 text-center text-gray-400 font-bold text-sm">
+                            {% trans "لا توجد سجلات مطابقة للبحث." %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% if is_paginated %}
+    <div class="mt-8 flex justify-center">
+        {% include 'partials/pagination.html' %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -13,7 +13,15 @@ class DataAuditLog(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, verbose_name=_("المستخدم القائم بالإجراء"))
     entity_type = models.CharField(max_length=50, verbose_name=_("نوع الجدول")) # مثال: AidApplication
     entity_id = models.CharField(max_length=255, verbose_name=_("معرف السجل"))
-    action = models.CharField(max_length=10, choices=[('CREATE', 'إضافة'), ('UPDATE', 'تعديل'), ('DELETE', 'حذف')])
+    action = models.CharField(
+        max_length=10, 
+        choices=[
+            ('CREATE', _('إضافة')), 
+            ('UPDATE', _('تعديل')), 
+            ('DELETE', _('حذف'))
+        ],
+        verbose_name=_("الإجراء")
+    )
     
     old_values = models.JSONField(null=True, blank=True, verbose_name=_("البيانات قبل"))
     new_values = models.JSONField(null=True, blank=True, verbose_name=_("البيانات بعد"))
@@ -99,7 +107,7 @@ class FinancialIntegrityLog(models.Model):
 
 class ApplicationHistory(models.Model):
     application = models.ForeignKey(
-        'AidApplication', 
+        'aid_management.AidApplication', 
         on_delete=models.CASCADE, 
         related_name='history',
         verbose_name=_("الطلب")

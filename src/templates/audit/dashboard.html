@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8 font-cairo" dir="rtl">
+    <h1 class="text-3xl font-black text-gray-900 mb-8 flex items-center gap-2">
+        <span class="w-1.5 h-8 bg-primary-600 rounded-full"></span>
+        {% trans "لوحة تحكم التدقيق والمراقبة" %}
+    </h1>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+        <div class="bg-white p-6 rounded-3xl shadow-xl border border-gray-100 border-b-4 border-b-primary-500 hover:-translate-y-1 transition-transform">
+            <div class="w-10 h-10 bg-primary-50 text-primary-600 rounded-xl flex items-center justify-center mb-4">📊</div>
+            <p class="text-gray-400 text-xs font-bold uppercase mb-1">{% trans "إجمالي السجلات" %}</p>
+            <p class="text-3xl font-black text-gray-900">{{ stats.total_logs }}</p>
+        </div>
+        <div class="bg-white p-6 rounded-3xl shadow-xl border border-gray-100 border-b-4 border-b-red-500 hover:-translate-y-1 transition-transform">
+            <div class="w-10 h-10 bg-red-50 text-red-600 rounded-xl flex items-center justify-center mb-4">🚨</div>
+            <p class="text-gray-400 text-xs font-bold uppercase mb-1">{% trans "تنبيهات أمنية" %}</p>
+            <p class="text-3xl font-black text-red-600">{{ stats.security_alerts }}</p>
+        </div>
+        <div class="bg-white p-6 rounded-3xl shadow-xl border border-gray-100 border-b-4 border-b-amber-500 hover:-translate-y-1 transition-transform">
+            <div class="w-10 h-10 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center mb-4">⚠️</div>
+            <p class="text-gray-400 text-xs font-bold uppercase mb-1">{% trans "تجاوزات النظام" %}</p>
+            <p class="text-3xl font-black text-amber-600">{{ stats.overrides_count }}</p>
+        </div>
+        <div class="bg-white p-6 rounded-3xl shadow-xl border border-gray-100 border-b-4 border-b-purple-500 hover:-translate-y-1 transition-transform">
+            <div class="w-10 h-10 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center mb-4">⚖️</div>
+            <p class="text-gray-400 text-xs font-bold uppercase mb-1">{% trans "اختلالات مالية" %}</p>
+            <p class="text-3xl font-black text-purple-600">{{ stats.unbalanced_cycles }}</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {% if integrity_check %}
+        <div class="bg-white p-8 rounded-3xl shadow-xl border border-gray-100 h-full">
+            <h2 class="text-xl font-black text-gray-800 mb-6 flex items-center gap-2">
+                <span class="w-1.5 h-6 bg-emerald-500 rounded-full"></span>
+                {% trans "آخر فحص للنزاهة المالية" %}
+            </h2>
+            <div class="bg-gray-50 p-6 rounded-2xl border border-gray-100 flex flex-col gap-4">
+                <div class="flex justify-between items-center border-b border-gray-200 pb-4">
+                    <span class="text-sm font-bold text-gray-500">{% trans "الدورة المالية:" %}</span>
+                    <span class="font-black text-gray-800">{{ integrity_check.cycle }}</span>
+                </div>
+                <div class="flex justify-between items-center border-b border-gray-200 pb-4">
+                    <span class="text-sm font-bold text-gray-500">{% trans "وقت الفحص:" %}</span>
+                    <span class="text-sm text-gray-600" dir="ltr">{{ integrity_check.timestamp|date:"Y/m/d H:i" }}</span>
+                </div>
+                <div class="flex justify-between items-center pt-2">
+                    <span class="text-sm font-bold text-gray-500">{% trans "الحالة المالية:" %}</span>
+                    {% if integrity_check.is_balanced %}
+                    <span class="px-4 py-2 bg-emerald-100 text-emerald-700 rounded-xl font-black text-sm flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        {% trans "متزنة (BALANCED)" %}
+                    </span>
+                    {% else %}
+                    <span class="px-4 py-2 bg-red-100 text-red-700 rounded-xl font-black text-sm flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        {% trans "غير متزنة (UNBALANCED)" %}
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="bg-white p-8 rounded-3xl shadow-xl border border-gray-100 h-full">
+            <h2 class="text-xl font-black text-gray-800 mb-6 flex items-center gap-2">
+                <span class="w-1.5 h-6 bg-primary-500 rounded-full"></span>
+                {% trans "ملخص الإجراءات" %}
+            </h2>
+            <div class="overflow-hidden rounded-2xl border border-gray-100">
+                <table class="w-full text-right whitespace-nowrap">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-4 text-xs font-black text-gray-500 uppercase">{% trans "نوع الإجراء" %}</th>
+                            <th class="px-6 py-4 text-xs font-black text-gray-500 uppercase">{% trans "إجمالي العدد" %}</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        {% for item in actions_summary %}
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-4 text-sm font-bold text-gray-700">{{ item.action }}</td>
+                            <td class="px-6 py-4 text-sm font-black text-primary-600">{{ item.total }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="2" class="px-6 py-8 text-center text-gray-400 font-bold text-sm">لا توجد إجراءات مسجلة</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8 font-cairo" dir="rtl">
+    <h1 class="text-3xl font-black text-gray-900 mb-8 flex items-center gap-2">
+        <span class="w-1.5 h-8 bg-primary-600 rounded-full"></span>
+        {% trans "سجلات تجاوز النظام (Overrides)" %}
+    </h1>
+
+    <div class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-right whitespace-nowrap">
+                <thead class="bg-gray-50 border-b border-gray-100">
+                    <tr>
+                        <th class="px-6 py-4 text-sm font-black text-gray-600">{% trans "المشرف (Admin)" %}</th>
+                        <th class="px-6 py-4 text-sm font-black text-gray-600">{% trans "الطلب المرتبط" %}</th>
+                        <th class="px-6 py-4 text-sm font-black text-gray-600">{% trans "السبب المسجل" %}</th>
+                        <th class="px-6 py-4 text-sm font-black text-gray-600">{% trans "وقت وتاريخ التجاوز" %}</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50">
+                    {% for override in overrides %}
+                    <tr class="hover:bg-red-50/30 transition-colors">
+                        <td class="px-6 py-4 text-sm font-bold text-gray-800">{{ override.admin_user.username }}</td>
+                        <td class="px-6 py-4 text-sm font-mono text-primary-600 font-bold">{{ override.application.serial_number }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-600 max-w-xs truncate" title="{{ override.reason }}">{{ override.reason }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-500" dir="ltr" style="text-align: right;">{{ override.timestamp|date:"Y/m/d H:i" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="px-6 py-10 text-center text-gray-400 font-bold text-sm">
+                            لا توجد سجلات تجاوز للنظام.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

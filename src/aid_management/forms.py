@@ -1,8 +1,20 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
+from django.forms.models import inlineformset_factory
 from .models import AidApplication, ScoringRule, CommitteeReview
+from assets_reporting.models import ApplicationDocument
 import json
 
+ApplicationDocumentFormSet = inlineformset_factory(
+    AidApplication, ApplicationDocument,
+    fields=['document_type', 'file'],
+    extra=1,
+    can_delete=True,
+    widgets={
+        'document_type': forms.Select(attrs={'class': 'form-select'}),
+        'file': forms.ClearableFileInput(attrs={'class': 'form-control', 'accept': '.pdf,.jpg,.jpeg,.png,.doc,.docx'}),
+    }
+)
 
 # ==========================================
 # 1. نموذج تقديم الطالب (Student Interface)
@@ -76,6 +88,7 @@ class CommitteeReviewForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         self.application = kwargs.pop('application', None)
+        self.reviewer = kwargs.pop('reviewer', None)
         super().__init__(*args, **kwargs)
 
         if self.application:
@@ -105,6 +118,10 @@ class CommitteeReviewForm(forms.ModelForm):
 
     def save(self, commit=True):
         instance = super().save(commit=False)
+        if self.application:
+            instance.application = self.application
+        if self.reviewer:
+            instance.reviewer = self.reviewer
         
         dimension_scores = {}
         for field_name, value in self.cleaned_data.items():

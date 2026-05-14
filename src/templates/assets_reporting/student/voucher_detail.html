@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title %}تفاصيل القسيمة | جامعة طنطا{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto py-12 px-4 font-cairo" dir="rtl">
+    <div class="mb-6">
+        <a href="{% url 'aid_management:student_application_list' %}" class="text-gray-500 font-bold hover:underline">← العودة لطلباتي</a>
+    </div>
+
+    <div class="bg-white rounded-[3rem] shadow-2xl border border-gray-100 overflow-hidden relative">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-primary-600/5 rounded-bl-full -z-0"></div>
+        
+        <div class="p-10 text-center relative z-10">
+            <div class="w-20 h-20 bg-primary-100 text-primary-600 rounded-2xl flex items-center justify-center mx-auto mb-6 transform rotate-3 shadow-lg">
+                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+            <h2 class="text-3xl font-black text-gray-900 font-tajawal">قسيمة الصرف الرقمية</h2>
+            <p class="text-gray-500 mt-2">يرجى التوجه لشؤون الطلاب/الخزينة لاستلام المبلغ.</p>
+        </div>
+
+        <div class="px-10 pb-10 space-y-8 relative z-10">
+            <div class="bg-gray-50 p-8 rounded-[2rem] border border-gray-100 space-y-6">
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-400 font-black text-xs uppercase">رقم القسيمة</span>
+                    <span class="font-mono font-black text-gray-900">{{ voucher.voucher_number }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-400 font-black text-xs uppercase">المبلغ المستحق</span>
+                    <span class="text-2xl font-black text-primary-600">{{ voucher.amount }} ج.م</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-400 font-black text-xs uppercase">تاريخ الانتهاء</span>
+                    <span class="font-bold text-red-500">{{ voucher.expiry_date|date:"Y/m/d" }}</span>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <p class="text-center text-[10px] text-gray-400 font-black uppercase tracking-widest">توقيع رقمي للحوكمة الماليّة (Hash)</p>
+                <div class="bg-gray-900 p-4 rounded-xl font-mono text-[10px] text-primary-400 break-all leading-relaxed border-2 border-primary-500/20">
+                    {{ voucher.security_hash }}
+                </div>
+                <p class="text-center text-[10px] text-gray-400 italic">هذا الكود يضمن عدم التلاعب ببيانات الصرف ويتم التحقق منه عند الصرف.</p>
+            </div>
+
+            <button onclick="window.print()" class="w-full bg-primary-600 text-white py-5 rounded-2xl font-black text-xl hover:bg-primary-700 shadow-xl transition-all hover:-translate-y-1">
+                طباعة القسيمة (PDF)
+            </button>
+        </div>
+        
+        <div class="h-2 bg-linear-to-r from-primary-400 via-primary-600 to-primary-800"></div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block title %}استمارة البحث الاجتماعي | جامعة طنطا{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-12 px-4 font-cairo" dir="rtl">
+    <div class="bg-white rounded-[2.5rem] shadow-2xl border border-gray-100 overflow-hidden">
+        <div class="bg-linear-to-l from-primary-900 to-primary-800 p-10 text-white relative">
+            <h2 class="text-3xl font-black mb-3 font-tajawal">استمارة البحث الاجتماعي الميداني</h2>
+            <p class="text-primary-100 text-sm opacity-90">يُرجى تعبئة بيانات البحث الميداني بدقة وإرفاق ملف التقرير إن وجد.</p>
+        </div>
+
+        <form method="post" enctype="multipart/form-data" class="p-10 space-y-10">
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+            <div class="bg-red-50 border-r-4 border-red-500 p-4 rounded-xl text-red-700 text-sm">
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {% for field in form %}
+                    <div class="flex flex-col gap-2 group {% if field.name == 'researcher_opinion' %}col-span-full{% endif %}">
+                        <label class="text-sm font-black text-gray-600 mr-1 transition-colors group-focus-within:text-primary-600">
+                            {{ field.label }}
+                        </label>
+                        {{ field }}
+                        {% if field.help_text %}
+                            <p class="text-[10px] text-gray-400 mt-1 leading-relaxed">{{ field.help_text }}</p>
+                        {% endif %}
+                        {% if field.errors %}
+                            <p class="text-xs text-red-500 font-bold mt-1">{{ field.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-4 pt-6">
+                <button type="submit" class="flex-2 bg-primary-600 text-white py-4 rounded-2xl font-black text-xl hover:bg-primary-700 shadow-xl transition-all hover:-translate-y-1 active:scale-95">
+                    حفظ استمارة البحث
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

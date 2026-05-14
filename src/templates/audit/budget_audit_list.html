@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8 font-cairo" dir="rtl">
+    <h1 class="text-3xl font-black text-gray-900 mb-8 flex items-center gap-2">
+        <span class="w-1.5 h-8 bg-primary-600 rounded-full"></span>
+        {% trans "سجلات التدقيق المالي للميزانية" %}
+    </h1>
+
+    <div class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-right whitespace-nowrap">
+                <thead class="bg-gray-50 border-b border-gray-100">
+                    <tr>
+                        <th class="px-6 py-4 text-sm font-black text-gray-600">{% trans "وقت وتاريخ الحدث" %}</th>
+                        <th class="px-6 py-4 text-sm font-black text-gray-600">{% trans "المستخدم" %}</th>
+                        <th class="px-6 py-4 text-sm font-black text-gray-600">{% trans "الدورة" %}</th>
+                        <th class="px-6 py-4 text-sm font-black text-gray-600">{% trans "المبلغ بعد التعديل" %}</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50">
+                    {% for log in budget_logs %}
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4 text-sm text-gray-600" dir="ltr" style="text-align: right;">{{ log.timestamp|date:"Y/m/d H:i" }}</td>
+                        <td class="px-6 py-4 text-sm font-bold text-gray-800">{{ log.user.username }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-600">{{ log.cycle }}</td>
+                        <td class="px-6 py-4 text-sm font-black text-primary-600">{{ log.amount_after }} ج.م</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="px-6 py-10 text-center text-gray-400 font-bold text-sm">
+                            لا توجد سجلات مالية لعرضها.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %}حذف مستند | جامعة طنطا{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto py-20 px-4 font-cairo" dir="rtl">
+    <div class="bg-white rounded-[2.5rem] shadow-2xl border border-gray-100 overflow-hidden">
+        <div class="p-10 text-center">
+            <div class="w-20 h-20 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+            </div>
+            <h2 class="text-2xl font-black text-gray-900 mb-4">هل أنت متأكد من الحذف؟</h2>
+            <p class="text-gray-500">سيتم حذف مستند "<span class="font-bold text-gray-800">{{ object.document_type.name }}</span>" بشكل نهائي من النظام. لا يمكن التراجع عن هذا الإجراء.</p>
+        </div>
+
+        <div class="p-10 bg-gray-50 border-t border-gray-100">
+            <form method="post" class="flex flex-col sm:flex-row gap-4">
+                {% csrf_token %}
+                <button type="submit" class="flex-2 bg-red-600 text-white py-4 rounded-2xl font-black hover:bg-red-700 transition-all shadow-lg">تأكيد الحذف النهائي</button>
+                <a href="{% url 'assets_reporting:document_list' %}" class="flex-1 text-center py-4 text-gray-600 font-bold hover:underline">إلغاء والعودة</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -22,14 +22,15 @@ class ProfileDashboardView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         user = request.user
         role_redirect_map = {
-            User.Role.STUDENT: 'accounts:student_profile_detail',
-            User.Role.REVIEWER: 'accounts:reviewer_profile_detail',
-            User.Role.COMMITTEE_HEAD: 'accounts:committee_head_profile_detail',
-            User.Role.AUDITOR: 'accounts:auditor_profile_detail',
+            User.Role.STUDENT: 'aid_management:application_list',
+            User.Role.REVIEWER: 'aid_management:reviewer_task_list',
+            User.Role.COMMITTEE_HEAD: 'aid_management:committee_dashboard',
+            User.Role.AUDITOR: 'audit:dashboard',
+            User.Role.ADMIN: 'admin:index',
         }
         redirect_url = role_redirect_map.get(user.role)
         if redirect_url:
-            return redirect(reverse(redirect_url))
+            return redirect(redirect_url)
         return redirect(reverse('accounts:login'))
 
 
